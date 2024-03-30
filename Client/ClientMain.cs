@@ -20,9 +20,9 @@ namespace Client
 
         protected override void Initialize()
         {
-            m_graphics.PreferredBackBufferWidth = 1920;
-            m_graphics.PreferredBackBufferHeight = 1080;
-            m_graphics.ApplyChanges();
+            // m_graphics.PreferredBackBufferWidth = 1920;
+            // m_graphics.PreferredBackBufferHeight = 1080;
+            // m_graphics.ApplyChanges();
 
             m_gameModel.initialize(this.Content);
 

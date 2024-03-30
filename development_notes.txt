@@ -1,3 +1,65 @@
 Development Notes
-  Snake Entity:
-    
+  GameStates
+    MainMenu
+    Gameplay
+      Tutorial
+      Playing 
+        Call to Server to Add
+      Death
+    Settings
+      Key Rebind
+      SelectOptions
+    About
+    Highscores
+    Quit
+
+  Systems:
+    Client:
+      Interpolation
+      Network
+      KeyboardControlled
+      MouseControlled
+    Shared
+      Renderer
+      Input
+    Server
+      Collision
+
+  Entities:
+    Snake:
+      Head
+      Segment
+      Tail
+      Collision
+      Move
+      Appearance
+      KeyboardControlled | MouseControlled
+      Position
+      Size
+
+    Food
+      Collision
+      Food
+        value?
+      Position
+      Size
+      Sprite
+        Client
+
+    Border
+      Position
+      Collision
+      Sprite?
+        Client
+
+    Tile
+      Position
+        Client
+
+  Background
+    Picture:
+    Tile
+      Variation?
+      
+    Global Size?
+    Tile Size & Count
