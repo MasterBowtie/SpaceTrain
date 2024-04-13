@@ -1,3 +1,7 @@
+Github: profPorkins
+  GameTech
+
+
 Development Notes
   GameStates
     MainMenu
@@ -27,15 +31,28 @@ Development Notes
 
   Entities:
     Snake:
-      Head
-      Segment
-      Tail
-      Collision
-      Move
-      Appearance
-      KeyboardControlled | MouseControlled
-      Position
-      Size
+      Head Entity:
+        Head
+        Appearance
+        Position
+        Input
+        Collision
+        TurnPoint
+        Invincible: Timed?
+      Segment Entity:
+        Segment
+        Appearance
+        Position
+        TurnPoint
+        Collision
+      Tail Entity:
+        Tail
+        Collision
+        Position
+        Appearance
+        TurnPoint
+
+      KeyboardControlled | MouseControlled?
 
     Food
       Collision
@@ -63,3 +80,9 @@ Development Notes
       
     Global Size?
     Tile Size & Count
+
+
+TurnPoint:
+  A FIFO of points that the segment will travel to
+  When point is "hit" (within tolerance) pull point off of the queue
+    May need to be split into two parts, before and after hitting point 

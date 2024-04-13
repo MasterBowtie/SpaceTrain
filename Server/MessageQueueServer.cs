@@ -106,7 +106,7 @@ namespace Server
         }
 
         /// <summary>
-        /// Send the message to all connected clients.
+        /// Send the message to all connected clientas.
         /// </summary>
         /// <param name="message"></param>
         public void broadcastMessage(Message message)

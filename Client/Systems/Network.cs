@@ -80,14 +80,17 @@ namespace Client.Systems
                         {
                             switch (input)
                             {
-                                case Shared.Components.Input.Type.Thrust:
-                                    Shared.Entities.Utility.thrust(entity, message.elapsedTime);
+                                case Shared.Components.Input.Type.Up:
+                                    Shared.Entities.Utility.up(entity, message.elapsedTime);
                                     break;
-                                case Shared.Components.Input.Type.RotateLeft:
-                                    Shared.Entities.Utility.rotateLeft(entity, message.elapsedTime);
+                                case Shared.Components.Input.Type.Left:
+                                    Shared.Entities.Utility.left(entity, message.elapsedTime);
                                     break;
-                                case Shared.Components.Input.Type.RotateRight:
-                                    Shared.Entities.Utility.rotateRight(entity, message.elapsedTime);
+                                case Shared.Components.Input.Type.Right:
+                                    Shared.Entities.Utility.right(entity, message.elapsedTime);
+                                    break;
+                                case Shared.Components.Input.Type.Down:
+                                    Shared.Entities.Utility.down(entity, message.elapsedTime);
                                     break;
                             }
                         }
