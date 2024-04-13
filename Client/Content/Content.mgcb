@@ -41,6 +41,18 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/CourierPrime64.spritefont
 
+#begin Textures/food.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/food.png
+
 #begin Textures/playerShip1_blue.png
 /importer:TextureImporter
 /processor:TextureProcessor

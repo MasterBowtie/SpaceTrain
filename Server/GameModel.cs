@@ -12,6 +12,8 @@ namespace Server
     private HashSet<int> m_clients = new HashSet<int>();
     private Dictionary<uint, Entity> m_entities = new Dictionary<uint, Entity>();
     private Dictionary<int, uint> m_clientToEntityId = new Dictionary<int, uint>();
+    private Dictionary<uint, Entity> m_food = new Dictionary<uint, Entity>();
+    private float timer = 100;
 
     Systems.Network m_systemNetwork = new Server.Systems.Network();
     Systems.CollideSystem collideSystem = new CollideSystem();
@@ -24,6 +26,16 @@ namespace Server
     public void update(TimeSpan elapsedTime)
     {
       m_systemNetwork.update(elapsedTime, MessageQueueServer.instance.getMessages());
+      timer -= elapsedTime.Milliseconds;
+      if (m_food.Count < 2500 && timer < 0)
+      {
+        Entity food = E_Food.create("Textures/food", 25.0f, 1);
+        m_food.Add(food.id, food);
+        addEntity(food);
+        Message message = new NewEntity(food);
+        MessageQueueServer.instance.broadcastMessage(message);
+        timer += 100;
+      } 
     }
 
     /// <summary>
@@ -39,6 +51,13 @@ namespace Server
       collideSystem.registerRemoveHandler(handleRemove);
 
       MessageQueueServer.instance.registerConnectHandler(handleConnect);
+
+      for (int i = 0; i < 1000; i++)
+      {
+        Entity food = E_Food.create("Textures/food", 25.0f, 1);
+        m_food.Add(food.id, food);
+        addEntity(food);
+      }
 
       return true;
     }
@@ -102,7 +121,7 @@ namespace Server
 
       m_entities[entity.id] = entity;
       m_systemNetwork.add(entity);
-      
+      collideSystem.add(entity);
     }
 
     /// <summary>
@@ -114,13 +133,9 @@ namespace Server
       m_entities.Remove(id);
       m_systemNetwork.remove(id);
       collideSystem.remove(id);
+      m_food.Remove(id);
     }
 
-    private void updateAllEntities() {
-      foreach (var id in m_clientToEntityId) {
-
-      }
-    }
 
     /// <summary>
     /// For the indicated client, sends messages for all other entities

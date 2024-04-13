@@ -26,6 +26,7 @@ namespace apedaile
     private Client.Systems.Interpolation systemInterpolation;
     private Client.Systems.PlayerRenderer playerRenderer;
     private Client.Systems.TileRenderer tileRenderer;
+    private Client.Systems.FoodRenderer foodRenderer;
     private HashSet<Keys> previouslyDown = new HashSet<Keys>();
     private int score = 0;
     private Entity player;
@@ -42,7 +43,6 @@ namespace apedaile
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
 
-      playerRenderer = new Client.Systems.PlayerRenderer(graphics);
       tileRenderer = new Client.Systems.TileRenderer(graphics);
       Texture2D wallTexture = contentManager.Load<Texture2D>("Textures/wall");
       Texture2D tileTexture = contentManager.Load<Texture2D>("Textures/tile");
@@ -103,6 +103,7 @@ namespace apedaile
     {
       // long start = DateTime.Now.Ticks;
       tileRenderer.update(gameTime, spriteBatch, player);
+      foodRenderer.update(gameTime, spriteBatch, player);
       playerRenderer.update(gameTime, spriteBatch, player);
       // long end = DateTime.Now.Ticks;
       // System.Console.WriteLine("{0}", (end - start)/10000);
@@ -133,6 +134,7 @@ namespace apedaile
       entities = new Dictionary<uint, Entity>();
       systemInterpolation = new Client.Systems.Interpolation();
       playerRenderer = new Client.Systems.PlayerRenderer(graphics);
+      foodRenderer = new Client.Systems.FoodRenderer(graphics);
 
       systemNetwork.registerHandler(Shared.Messages.Type.NewEntity, (TimeSpan elapsedTime, Message message) =>
         {
@@ -177,6 +179,14 @@ namespace apedaile
     {
       Entity entity = new Entity(message.id);
 
+      if (message.hasAApperance)
+      {
+        Texture2D texture = contentManager.Load<Texture2D>(message.texture);
+        int subImageWidth = message.subImageWidth;
+        int[] spriteTime = message.spriteTime;
+        entity.add(new A_Sprite(texture, subImageWidth, spriteTime));
+      }
+
       if (message.hasAppearance)
       {
         Texture2D texture = contentManager.Load<Texture2D>(message.texture);
@@ -218,10 +228,14 @@ namespace apedaile
         return;
       }
 
+      if (entity.contains<Shared.Components.Input>())
+      {
+        player = entity;
+      }
       entities[entity.id] = entity;
-      player = entity;
       systemKeyboardInput.add(entity);
       playerRenderer.add(entity);
+      foodRenderer.add(entity);
       systemNetwork.add(entity);
       systemInterpolation.add(entity);
     }
@@ -237,6 +251,7 @@ namespace apedaile
       systemKeyboardInput.remove(id);
       systemNetwork.remove(id);
       playerRenderer.remove(id);
+      foodRenderer.remove(id);
       systemInterpolation.remove(id);
     }
 

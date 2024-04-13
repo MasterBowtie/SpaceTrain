@@ -7,15 +7,15 @@ using Shared.Entities;
 
 namespace Client.Systems
 {
-  public class PlayerRenderer : Shared.Systems.System
+  public class FoodRenderer : Shared.Systems.System
   {
 
     private GraphicsDeviceManager graphics;
     private Vector2 screenCenter;
 
-    public PlayerRenderer(GraphicsDeviceManager graphics) :
+    public FoodRenderer(GraphicsDeviceManager graphics) :
         base(
-            typeof(Client.Components.Sprite),
+            typeof(Client.Components.A_Sprite),
             typeof(Shared.Components.Position),
             typeof(Shared.Components.Size)
             )
@@ -45,25 +45,42 @@ namespace Client.Systems
       {
         var position = entity.get<Shared.Components.Position>().position + center;
         var size = entity.get<Shared.Components.Size>().size;
-        if (position.X - size.X/2 > -100 && position.X + size.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
+        if (position.X - size.X / 2 > -100 && position.X + size.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
         {
           var orientation = entity.get<Shared.Components.Position>().orientation;
-          var texture = entity.get<Components.Sprite>().texture;
-          var texCenter = entity.get<Components.Sprite>().center;
+          var sprite = entity.get<Components.A_Sprite>();
+          var texture = sprite.texture;
+          var texCenter = sprite.center;
+          sprite.animationTime += gameTime.ElapsedGameTime;
+          if (sprite.animationTime.TotalMilliseconds >= sprite.spriteTime[sprite.subImageIndex])
+          {
+            sprite.animationTime -= TimeSpan.FromMilliseconds(sprite.spriteTime[sprite.subImageIndex]);
+            sprite.subImageIndex++;
+            sprite.subImageIndex = sprite.subImageIndex % sprite.spriteTime.Length;
+          }
+          var subImageIndex = sprite.subImageIndex;
+          var subImageWidth = sprite.subImageWidth;
+
 
           // Build a rectangle centered at position, with width/height of size
-
           Rectangle rectangle = new Rectangle(
               (int)(position.X - size.X / 2),
               (int)(position.Y - size.Y / 2),
               (int)size.X,
               (int)size.Y);
+          // Build a rectangle for specific image
+          Rectangle image = new Rectangle(
+            subImageIndex * subImageWidth,
+            0, 
+            subImageWidth,
+            texture.Height
+            );
 
 
           spriteBatch.Draw(
               texture,
               rectangle,
-              null,
+              image,
               Color.White,
               orientation,
               texCenter,
