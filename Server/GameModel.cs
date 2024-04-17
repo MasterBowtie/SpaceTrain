@@ -19,7 +19,7 @@ namespace Server
     private Dictionary<int, int> m_scores = new Dictionary<int, int>();
     private Dictionary<uint, Entity> m_food = new Dictionary<uint, Entity>();
     private float timer = 100;
-    private float moveRate = 0.2f;
+    private float moveRate = 0.15f;
 
     Systems.Network m_systemNetwork = new Server.Systems.Network();
     Systems.CollideSystem m_collideSystem = new CollideSystem();
@@ -55,9 +55,11 @@ namespace Server
     {
       m_systemNetwork.registerHandler(Shared.Messages.Type.Join, handleJoin);
       m_systemNetwork.registerHandler(Shared.Messages.Type.Disconnect, handleDisconnect);
+      m_systemNetwork.registerHandler(Shared.Messages.Type.Leave, handleLeave);
 
       m_collideSystem.registerHandler(Shared.Messages.Type.Join, handleJoin);
       m_collideSystem.registerHandler(Shared.Messages.Type.Disconnect, handleDisconnect);
+      m_collideSystem.registerHandler(Shared.Messages.Type.Leave, handleLeave);
       m_collideSystem.registerRemoveHandler(handleRemove);
       m_collideSystem.registerEatHandler(handleEat);
 
@@ -105,7 +107,10 @@ namespace Server
     {
       m_clients.Remove(clientId);
 
-      handleRemove(m_clientToEntityId[clientId]);
+      if (m_clientToEntityId.ContainsKey(clientId))
+      {
+        handleRemove(m_clientToEntityId[clientId]);
+      }
 
       m_clientToEntityId.Remove(clientId);
     }
@@ -130,7 +135,7 @@ namespace Server
 
           removeEntity(entity.id);
 
-          Entity food = E_Food.create("Textures/food", 25.0f, 1, entity.id, entity.get<Position>().position - entity.get<Size>().size);
+          Entity food = E_Food.create("Textures/food", 25.0f, 1, entity.id, entity.get<Position>().position);
           childMessage = new Shared.Messages.NewEntity(food);
           MessageQueueServer.instance.broadcastMessage(childMessage);
 
@@ -211,6 +216,19 @@ namespace Server
         MessageQueueServer.instance.sendMessage(clientId, new Shared.Messages.NewEntity(item.Value));
       }
     }
+
+    /// <summary>
+    /// </summary>
+    private void handleLeave(int clientId, TimeSpan elapsedTime, Shared.Messages.Message message)
+    {
+      if (m_clientToEntityId.ContainsKey(clientId))
+      {
+        handleRemove(m_clientToEntityId[clientId]);
+      }
+
+      m_clientToEntityId.Remove(clientId);
+    }
+
 
     /// <summary>
     /// Handler for the Join message.  It gets a player entity created,

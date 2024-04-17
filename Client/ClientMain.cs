@@ -13,6 +13,10 @@ namespace Client
     private IGameState currentState;
     private Dictionary<GameStateEnum, IGameState> states;
     private KeyboardInput keyboard;
+    private Client.Systems.Network systemNetwork;
+    private Client.Systems.Interpolation systemInterpolation = new Client.Systems.Interpolation();
+    private Shared.Systems.Movement moveSystem = new Shared.Systems.Movement();
+
 
     public ClientMain()
     {
@@ -26,8 +30,9 @@ namespace Client
       // m_graphics.PreferredBackBufferWidth = 1920;
       // m_graphics.PreferredBackBufferHeight = 1080;
       // m_graphics.ApplyChanges();
-      //IsFixedTimeStep = false;
 
+
+      systemNetwork = new Client.Systems.Network();
       states = new Dictionary<GameStateEnum, IGameState> {
                 {GameStateEnum.MainMenu, new MainMenuView()},
                 {GameStateEnum.GamePlay, new GamePlayView()},
@@ -46,8 +51,12 @@ namespace Client
       }
 
       GamePlayView gs = (GamePlayView)states[GameStateEnum.GamePlay];
+      gs.setupNetwork(systemNetwork, systemInterpolation, moveSystem);
 
       currentState = states[GameStateEnum.MainMenu];
+
+      MessageQueueClient.shutdown();
+      MessageQueueClient.instance.initialize("localhost", 3000);
       base.Initialize();
     }
 
@@ -66,23 +75,16 @@ namespace Client
 
       GameStateEnum nextStateEnum = currentState.processInput(gameTime);
       keyboard.Update(gameTime, nextStateEnum);
-      if (nextStateEnum == GameStateEnum.GamePlay && currentState != states[GameStateEnum.GamePlay])
-      {
-        GamePlayView gs = (GamePlayView)states[GameStateEnum.GamePlay];
-        gs.beginConnection();
-      }
-      if (nextStateEnum != GameStateEnum.GamePlay && currentState == states[GameStateEnum.GamePlay])
-      {
-        GamePlayView gs = (GamePlayView)states[GameStateEnum.GamePlay];
-        gs.endConnection();
-      }
       if (nextStateEnum == GameStateEnum.Exit)
       {
+        MessageQueueClient.instance.sendMessage(new Shared.Messages.Disconnect());
         Exit();
       }
       else
       {
-
+        systemNetwork.update(gameTime.ElapsedGameTime, MessageQueueClient.instance.getMessages());
+        systemInterpolation.update(gameTime.ElapsedGameTime);
+        moveSystem.update(gameTime.ElapsedGameTime);
         currentState.update(gameTime);
         currentState = states[nextStateEnum];
       }

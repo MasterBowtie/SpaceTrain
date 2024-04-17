@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Timers;
 using Client;
 using Client.Components;
+using Client.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,15 +22,21 @@ namespace apedaile
 
     private ContentManager contentManager;
     private Dictionary<uint, Entity> entities;
-    private Client.Systems.Network systemNetwork;
+    
+    
     private Client.Systems.KeyboardInput systemKeyboardInput;
-    private Client.Systems.Interpolation systemInterpolation = new Client.Systems.Interpolation();
-    private Shared.Systems.Movement moveSystem = new Shared.Systems.Movement();
+    private Client.Systems.Network systemNetwork;
+    private Client.Systems.Interpolation systemInterpolation;
+    private Shared.Systems.Movement moveSystem;
+
+
     private Client.Systems.PlayerRenderer playerRenderer;
     private Client.Systems.TileRenderer tileRenderer;
     private Client.Systems.FoodRenderer foodRenderer;
     private HashSet<Keys> previouslyDown = new HashSet<Keys>();
     private int score = 0;
+    private float timer = 1000;
+    private bool joined = false;
     private uint playerId;
     private float moveRate;
 
@@ -39,6 +46,32 @@ namespace apedaile
     public override void setupInput(KeyboardInput keyboard)
     {
       keyboard.registerCommand(Keys.Escape, true, new IInputDevice.CommandDelegate(exit), GameStateEnum.GamePlay, Actions.exit);
+      
+      systemKeyboardInput = new Client.Systems.KeyboardInput(new List<Tuple<Shared.Components.Input.Type, Keys>>
+      {
+        Tuple.Create(Shared.Components.Input.Type.Up, Keys.W),
+        Tuple.Create(Shared.Components.Input.Type.Left, Keys.A),
+        Tuple.Create(Shared.Components.Input.Type.Right, Keys.D),
+        Tuple.Create(Shared.Components.Input.Type.Down, Keys.S),
+      });
+    }
+
+    public void setupNetwork(Client.Systems.Network network, Client.Systems.Interpolation interpolation, Shared.Systems.Movement move)
+    {
+      systemNetwork = network;
+      systemInterpolation = interpolation;
+      moveSystem = move;
+
+      entities = new Dictionary<uint, Entity>();
+      systemNetwork.registerHandler(Shared.Messages.Type.NewEntity, (TimeSpan elapsedTime, Message message) =>
+      {
+        handleNewEntity((NewEntity)message);
+      });
+
+      systemNetwork.registerHandler(Shared.Messages.Type.RemoveEntity, (TimeSpan elapsedTime, Message message) =>
+      {
+        handleRemoveEntity((RemoveEntity)message);
+      });
     }
 
     public override void loadContent(ContentManager contentManager)
@@ -71,8 +104,6 @@ namespace apedaile
 
       this.contentManager = contentManager;
     }
-
-    
 
     public override GameStateEnum processInput(GameTime gameTime)
     {
@@ -118,16 +149,20 @@ namespace apedaile
 
     public override void update(GameTime gameTime)
     {
+      timer -= gameTime.ElapsedGameTime.Milliseconds;
+      if (timer < 0 && !joined)
+      {
+        MessageQueueClient.instance.sendMessage(new Join());
+        joined = true;
+      }
+
       Entity? player = null;
       if (entities.ContainsKey(playerId))
       {
         player = entities[playerId];
       }
 
-      systemNetwork.update(gameTime.ElapsedGameTime, MessageQueueClient.instance.getMessages());
       systemKeyboardInput.update(gameTime.ElapsedGameTime);
-      systemInterpolation.update(gameTime.ElapsedGameTime);
-      moveSystem.update(gameTime.ElapsedGameTime);
 
       if (player != null && !entities.ContainsKey(player.id))
       {
@@ -138,41 +173,11 @@ namespace apedaile
     public void exit(GameTime gameTime, float value)
     {
       score = 0;
+      timer = 1000;
+      joined = false;
+      MessageQueueClient.instance.sendMessage(new Leave());
       nextState = GameStateEnum.MainMenu;
     }  
-    public void beginConnection()
-    {
-      systemNetwork = new Client.Systems.Network();
-      entities = new Dictionary<uint, Entity>();
-      systemInterpolation.clearSystem();
-      moveSystem.clearSystem();
-      playerRenderer.clearSystem();
-      foodRenderer.clearSystem();
-
-      systemNetwork.registerHandler(Shared.Messages.Type.NewEntity, (TimeSpan elapsedTime, Message message) =>
-        {
-          handleNewEntity((NewEntity)message);
-        });
-
-      systemNetwork.registerHandler(Shared.Messages.Type.RemoveEntity, (TimeSpan elapsedTime, Message message) =>
-      {
-        handleRemoveEntity((RemoveEntity)message);
-      });
-
-      systemKeyboardInput = new Client.Systems.KeyboardInput(new List<Tuple<Shared.Components.Input.Type, Keys>>
-      {
-        Tuple.Create(Shared.Components.Input.Type.Up, Keys.W),
-        Tuple.Create(Shared.Components.Input.Type.Left, Keys.A),
-        Tuple.Create(Shared.Components.Input.Type.Right, Keys.D),
-        Tuple.Create(Shared.Components.Input.Type.Down, Keys.S),
-      });
-      MessageQueueClient.shutdown();
-      MessageQueueClient.instance.initialize("localhost", 3000);
-    }
-    public void endConnection()
-    {
-      MessageQueueClient.instance.sendMessage(new Shared.Messages.Disconnect());
-    }
 
     public void signalKeyPressed(Keys key)
     {

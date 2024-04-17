@@ -9,6 +9,7 @@ namespace Shared.Messages
         RemoveEntity,   // Server to client
         //SendScore,
         Join,           // Client to server
+        Leave,          // Client to server
         Input,          // Client to server
         Disconnect      // Client to server
         //GetScore
