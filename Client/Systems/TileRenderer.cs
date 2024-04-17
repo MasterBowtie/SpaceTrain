@@ -12,6 +12,7 @@ namespace Client.Systems
 
     private GraphicsDeviceManager graphics;
     private Vector2 screenCenter;
+    private Vector2 center = new Vector2(2500, 2500);
 
     public TileRenderer(GraphicsDeviceManager graphics) :
         base(
@@ -30,23 +31,25 @@ namespace Client.Systems
 
     public void update(GameTime gameTime, SpriteBatch spriteBatch, Entity player)
     {
-      Vector2 center = new Vector2(2500, 2500);
+
 
       if (player != null)
+
+        //-player.get<Size>().size.X
       {
         center = new Vector2(
-          screenCenter.X - player.get<Position>().position.X + player.get<Size>().size.X / 2,
-          screenCenter.Y - player.get<Position>().position.Y + player.get<Size>().size.Y / 2);
+          player.get<Position>().position.X  - screenCenter.X,
+         player.get<Position>().position.Y  - screenCenter.Y);
       }
 
       spriteBatch.Begin();
 
       foreach (Entity entity in m_entities.Values)
       {
-        var position = entity.get<Shared.Components.Position>().position + center;
+        var position = entity.get<Shared.Components.Position>().position - center;
+        var size = entity.get<Shared.Components.Size>().size;
         if (position.X > -100 && position.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100) {
           var orientation = entity.get<Shared.Components.Position>().orientation;
-          var size = entity.get<Shared.Components.Size>().size;
           var texture = entity.get<Components.Sprite>().texture;
           var texCenter = entity.get<Components.Sprite>().center;
 

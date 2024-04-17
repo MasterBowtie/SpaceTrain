@@ -8,7 +8,11 @@ namespace Shared.Components
             Up,
             Down,
             Left,
-            Right
+            Right,
+            NE,
+            NW,
+            SE,
+            SW,
         }
 
         public Input(List<Type> inputs)

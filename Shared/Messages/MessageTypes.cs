@@ -7,8 +7,10 @@ namespace Shared.Messages
         NewEntity,      // Server to client
         UpdateEntity,   // Server to client
         RemoveEntity,   // Server to client
+        //SendScore,
         Join,           // Client to server
         Input,          // Client to server
         Disconnect      // Client to server
+        //GetScore
     }
 }

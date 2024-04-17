@@ -23,13 +23,15 @@ namespace apedaile
     private Dictionary<uint, Entity> entities;
     private Client.Systems.Network systemNetwork;
     private Client.Systems.KeyboardInput systemKeyboardInput;
-    private Client.Systems.Interpolation systemInterpolation;
+    private Client.Systems.Interpolation systemInterpolation = new Client.Systems.Interpolation();
+    private Shared.Systems.Movement moveSystem = new Shared.Systems.Movement();
     private Client.Systems.PlayerRenderer playerRenderer;
     private Client.Systems.TileRenderer tileRenderer;
     private Client.Systems.FoodRenderer foodRenderer;
     private HashSet<Keys> previouslyDown = new HashSet<Keys>();
     private int score = 0;
-    private Entity player;
+    private uint playerId;
+    private float moveRate;
 
 
     private GameStateEnum nextState = GameStateEnum.GamePlay;
@@ -42,6 +44,8 @@ namespace apedaile
     public override void loadContent(ContentManager contentManager)
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
+      playerRenderer = new Client.Systems.PlayerRenderer(graphics);
+      foodRenderer = new Client.Systems.FoodRenderer(graphics);
 
       tileRenderer = new Client.Systems.TileRenderer(graphics);
       Texture2D wallTexture = contentManager.Load<Texture2D>("Textures/wall");
@@ -101,22 +105,30 @@ namespace apedaile
 
     public override void render(GameTime gameTime)
     {
-      // long start = DateTime.Now.Ticks;
+      Entity? player = null;
+      if (entities.ContainsKey(playerId))
+      {
+       player = entities[playerId];
+      }
+
       tileRenderer.update(gameTime, spriteBatch, player);
       foodRenderer.update(gameTime, spriteBatch, player);
       playerRenderer.update(gameTime, spriteBatch, player);
-      // long end = DateTime.Now.Ticks;
-      // System.Console.WriteLine("{0}", (end - start)/10000);
     }
 
     public override void update(GameTime gameTime)
     {
+      Entity? player = null;
+      if (entities.ContainsKey(playerId))
+      {
+        player = entities[playerId];
+      }
+
       systemNetwork.update(gameTime.ElapsedGameTime, MessageQueueClient.instance.getMessages());
       systemKeyboardInput.update(gameTime.ElapsedGameTime);
       systemInterpolation.update(gameTime.ElapsedGameTime);
-      if (player != null && entities.ContainsKey(player.id)) {
-        player = entities[player.id];
-      }
+      moveSystem.update(gameTime.ElapsedGameTime);
+
       if (player != null && !entities.ContainsKey(player.id))
       {
         //nextState = GameStateEnum.Lose;
@@ -132,9 +144,10 @@ namespace apedaile
     {
       systemNetwork = new Client.Systems.Network();
       entities = new Dictionary<uint, Entity>();
-      systemInterpolation = new Client.Systems.Interpolation();
-      playerRenderer = new Client.Systems.PlayerRenderer(graphics);
-      foodRenderer = new Client.Systems.FoodRenderer(graphics);
+      systemInterpolation.clearSystem();
+      moveSystem.clearSystem();
+      playerRenderer.clearSystem();
+      foodRenderer.clearSystem();
 
       systemNetwork.registerHandler(Shared.Messages.Type.NewEntity, (TimeSpan elapsedTime, Message message) =>
         {
@@ -153,12 +166,12 @@ namespace apedaile
         Tuple.Create(Shared.Components.Input.Type.Right, Keys.D),
         Tuple.Create(Shared.Components.Input.Type.Down, Keys.S),
       });
+      MessageQueueClient.shutdown();
       MessageQueueClient.instance.initialize("localhost", 3000);
     }
     public void endConnection()
     {
       MessageQueueClient.instance.sendMessage(new Shared.Messages.Disconnect());
-      MessageQueueClient.shutdown();
     }
 
     public void signalKeyPressed(Keys key)
@@ -178,6 +191,16 @@ namespace apedaile
     private Entity createEntity(Shared.Messages.NewEntity message)
     {
       Entity entity = new Entity(message.id);
+
+      if (message.hasHead)
+      {
+        entity.add(new Head(message.head));
+      }
+
+      if (message.hasTurnPoint)
+      {
+        entity.add(new Shared.Components.TurnPoint());
+      }
 
       if (message.hasAApperance)
       {
@@ -205,6 +228,8 @@ namespace apedaile
 
       if (message.hasMovement)
       {
+        // The client seems to be moving slower than the server
+        moveRate = message.moveRate;
         entity.add(new Movement(message.moveRate, message.rotateRate));
       }
 
@@ -213,6 +238,34 @@ namespace apedaile
         entity.add(new Shared.Components.Input(message.inputs));
       }
 
+      if (message.hasConnected)
+      {
+        Entity? leads = null;
+        Entity? follows = null;
+
+        if (message.hasLead && entities.ContainsKey(message.leads))
+        {
+          leads = entities[message.leads];
+          if (leads.get<Connected>().follows == null)
+          {
+            var connected = leads.get<Connected>();
+            connected.follows = entity;
+          }
+        }
+
+        if (message.hasFollow && entities.ContainsKey(message.follows))
+        {
+          follows = entities[message.follows];
+          if (follows.get<Connected>().leads == null)
+          {
+            var connected = follows.get<Connected>();
+            connected.leads = entity;
+          }
+          entity.add(new Shared.Components.Path(follows.get<Position>(), moveRate));
+        }
+        entity.add(new Connected(leads, follows));
+      }
+      
       return entity;
     }
 
@@ -230,7 +283,7 @@ namespace apedaile
 
       if (entity.contains<Shared.Components.Input>())
       {
-        player = entity;
+        playerId = entity.id;
       }
       entities[entity.id] = entity;
       systemKeyboardInput.add(entity);
@@ -238,6 +291,7 @@ namespace apedaile
       foodRenderer.add(entity);
       systemNetwork.add(entity);
       systemInterpolation.add(entity);
+      moveSystem.add(entity);
     }
 
     /// <summary>
@@ -253,6 +307,7 @@ namespace apedaile
       playerRenderer.remove(id);
       foodRenderer.remove(id);
       systemInterpolation.remove(id);
+      moveSystem.remove(id);
     }
 
     private void handleNewEntity(NewEntity message)

@@ -68,35 +68,35 @@ namespace Client.Systems
             // After processing all the messages, perform server reconciliation by
             // resimulating the inputs from any sent messages not yet acknowledged by the server.
             var sent = MessageQueueClient.instance.getSendMessageHistory(m_lastMessageId);
-            while (sent.Count > 0)
-            {
-                var message = (Shared.Messages.Input)sent.Dequeue();
-                if (message.type == Shared.Messages.Type.Input)
-                {
-                    var entity = m_entities[message.entityId];
-                    if (m_updatedEntities.Contains(entity.id))
-                    {
-                        foreach (var input in message.inputs)
-                        {
-                            switch (input)
-                            {
-                                case Shared.Components.Input.Type.Up:
-                                    Shared.Entities.Utility.up(entity, message.elapsedTime);
-                                    break;
-                                case Shared.Components.Input.Type.Left:
-                                    Shared.Entities.Utility.left(entity, message.elapsedTime);
-                                    break;
-                                case Shared.Components.Input.Type.Right:
-                                    Shared.Entities.Utility.right(entity, message.elapsedTime);
-                                    break;
-                                case Shared.Components.Input.Type.Down:
-                                    Shared.Entities.Utility.down(entity, message.elapsedTime);
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
+            //while (sent.Count > 0)
+            //{
+            //    var message = (Shared.Messages.Input)sent.Dequeue();
+            //    if (message.type == Shared.Messages.Type.Input)
+            //    {
+            //        var entity = m_entities[message.entityId];
+            //        if (m_updatedEntities.Contains(entity.id))
+            //        {
+            //            foreach (var input in message.inputs)
+            //            {
+            //                switch (input)
+            //                {
+            //                    case Shared.Components.Input.Type.Up:
+            //                        Shared.Entities.Utility.up(entity, message.elapsedTime);
+            //                        break;
+            //                    case Shared.Components.Input.Type.Left:
+            //                        Shared.Entities.Utility.left(entity, message.elapsedTime);
+            //                        break;
+            //                    case Shared.Components.Input.Type.Right:
+            //                        Shared.Entities.Utility.right(entity, message.elapsedTime);
+            //                        break;
+            //                    case Shared.Components.Input.Type.Down:
+            //                        Shared.Entities.Utility.down(entity, message.elapsedTime);
+            //                        break;
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         public void registerHandler(Shared.Messages.Type type, Handler handler)

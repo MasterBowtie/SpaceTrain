@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using apedaile;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,6 +26,7 @@ namespace Client
       // m_graphics.PreferredBackBufferWidth = 1920;
       // m_graphics.PreferredBackBufferHeight = 1080;
       // m_graphics.ApplyChanges();
+      //IsFixedTimeStep = false;
 
       states = new Dictionary<GameStateEnum, IGameState> {
                 {GameStateEnum.MainMenu, new MainMenuView()},
@@ -61,6 +63,7 @@ namespace Client
 
     protected override void Update(GameTime gameTime)
     {
+
       GameStateEnum nextStateEnum = currentState.processInput(gameTime);
       keyboard.Update(gameTime, nextStateEnum);
       if (nextStateEnum == GameStateEnum.GamePlay && currentState != states[GameStateEnum.GamePlay])
@@ -79,6 +82,7 @@ namespace Client
       }
       else
       {
+
         currentState.update(gameTime);
         currentState = states[nextStateEnum];
       }
@@ -92,6 +96,7 @@ namespace Client
       currentState.render(gameTime);
 
       base.Draw(gameTime);
+
     }
   }
 }

@@ -11,6 +11,17 @@ namespace Shared.Messages
     {
       this.id = entity.id;
 
+      if (entity.contains<Head>())
+      {
+        this.hasHead = true;
+        this.head = entity.get<Head>().id;
+      }
+
+      if (entity.contains<Shared.Components.TurnPoint>())
+      {
+        this.hasTurnPoint = true;
+      }
+
       if (entity.contains<Appearance>())
       {
         this.hasAppearance = true;
@@ -57,6 +68,22 @@ namespace Shared.Messages
       {
         this.inputs = new List<Components.Input.Type>();
       }
+
+      if (entity.contains<Connected>())
+      {
+        this.hasConnected = true;
+        if (entity.get<Connected>().leads != null)
+        {
+          this.hasLead = true;
+          this.leads = entity.get<Connected>().leads.id;
+        }
+        if (entity.get<Connected>().follows != null)
+        {
+          this.hasFollow = true;
+          this.follows = entity.get<Connected>().follows.id;
+        }
+      }
+
     }
     public NewEntity() : base(Type.NewEntity)
     {
@@ -65,6 +92,13 @@ namespace Shared.Messages
     }
 
     public uint id { get; private set; }
+
+    // Head
+    public bool hasHead { get; private set; } = false;
+    public int head { get; private set; }
+
+    //Turn Point
+    public bool hasTurnPoint { get; private set; } = false;
 
     // Animated Apperance
     public bool hasAApperance { get; private set; } = false;
@@ -93,12 +127,32 @@ namespace Shared.Messages
     public bool hasInput { get; private set; } = false;
     public List<Components.Input.Type> inputs { get; private set; }
 
+    public bool hasConnected { get; private set; } = false;
+
+    public bool hasLead { get; private set;} = false;
+    public uint leads { get; private set; }
+    public bool hasFollow { get; private set; } = false;
+    public uint follows { get; private set; }
+
     public override byte[] serialize()
     {
       List<byte> data = new List<byte>();
 
       data.AddRange(base.serialize());
       data.AddRange(BitConverter.GetBytes(id));
+
+      data.AddRange(BitConverter.GetBytes(hasHead));
+      if (hasHead)
+      {
+        data.AddRange(BitConverter.GetBytes(head));
+      }
+
+      data.AddRange(BitConverter.GetBytes(hasTurnPoint));
+      // Nothing else to do for a  turn point, because marking it
+      // as a turn point is all the info we need.  The position
+      // and direction of the turn point are contained in the Position component
+      // on the entity.
+
 
       data.AddRange(BitConverter.GetBytes(hasAApperance));
       if (hasAApperance)
@@ -154,6 +208,23 @@ namespace Shared.Messages
         }
       }
 
+
+      data.AddRange(BitConverter.GetBytes(hasConnected));
+      if (hasConnected)
+      {
+        data.AddRange(BitConverter.GetBytes(hasLead));
+        if (hasLead)
+        {
+          data.AddRange(BitConverter.GetBytes((UInt32)leads));
+        }
+        data.AddRange(BitConverter.GetBytes(hasFollow));
+        if (hasFollow)
+        {
+          data.AddRange(BitConverter.GetBytes((UInt32)follows));
+        }
+      }
+
+
       return data.ToArray();
     }
 
@@ -163,6 +234,17 @@ namespace Shared.Messages
 
       this.id = BitConverter.ToUInt32(data, offset);
       offset += sizeof(uint);
+
+      this.hasHead = BitConverter.ToBoolean(data, offset);
+      offset += sizeof(bool);
+      if (hasHead)
+      {
+        this.head = BitConverter.ToInt32(data, offset);
+        offset += sizeof(Int32);
+      }
+
+      this.hasTurnPoint = BitConverter.ToBoolean(data, offset);
+      offset += sizeof(bool);
 
       this.hasAApperance = BitConverter.ToBoolean(data, offset);
       offset += sizeof(bool);
@@ -246,6 +328,26 @@ namespace Shared.Messages
           offset += sizeof(UInt16);
         }
       }
+      this.hasConnected = BitConverter.ToBoolean(data, offset);
+      offset += sizeof(bool);
+
+      if (hasConnected)
+      {
+        this.hasLead = BitConverter.ToBoolean(data, offset);
+        offset += sizeof(bool);
+        if (this.hasLead) { 
+          this.leads = BitConverter.ToUInt32(data, offset);
+          offset += sizeof(uint);
+        }
+        this.hasFollow = BitConverter.ToBoolean(data, offset);
+        offset += sizeof(bool);
+        if (this.hasFollow)
+        {
+          this.follows = BitConverter.ToUInt32(data, offset);
+          offset += sizeof(uint);
+        }
+      }
+
 
       return offset;
     }

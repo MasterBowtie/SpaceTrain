@@ -81,8 +81,15 @@ namespace Client
 
         m_instance.m_keepRunning = false;
         m_instance.m_eventSendMessages.Set();
-        m_instance.m_socketServer.Shutdown(SocketShutdown.Both);
-        m_instance.m_socketServer.Disconnect(false);
+        try
+        {
+          m_instance.m_socketServer.Shutdown(SocketShutdown.Both);
+          m_instance.m_socketServer.Disconnect(false);
+        }
+        catch (SocketException err)
+        {
+          Console.WriteLine(err);
+        }
         m_instance.m_socketServer.Close();
 
         m_instance = null;
@@ -266,6 +273,10 @@ namespace Client
           catch (SocketException)
           {
             // We expect this when a timeout occurs on the receive
+          }
+          catch (Exception)
+          {
+            
           }
 
         }

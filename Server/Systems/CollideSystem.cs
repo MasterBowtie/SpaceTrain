@@ -1,8 +1,7 @@
-﻿using Shared.Components;
+﻿
+using Microsoft.Xna.Framework;
+using Shared.Components;
 using Shared.Entities;
-using Shared.Messages;
-using static Server.Systems.CollideSystem;
-using static Server.Systems.Network;
 
 namespace Server.Systems
 {
@@ -13,90 +12,111 @@ namespace Server.Systems
     public delegate void JoinHandler(int clientId);
     public delegate void DisconnectHandler(int clientId);
     public delegate void RemoveHandler(uint entityId);
+    public delegate void EatHandler(uint entityId);
 
     private Dictionary<Shared.Messages.Type, Handler> m_commandMap = new Dictionary<Shared.Messages.Type, Handler>();
-    private JoinHandler m_joinHandler;
-    private DisconnectHandler m_disconnectHandler;
     private RemoveHandler m_removeHandler;
+    private EatHandler m_eatHandler;
+    private Dictionary<uint, Entity> m_players = new Dictionary<uint, Entity>();
 
     private List<Entity> removeList = new List<Entity>();
     private List<Entity> killed = new List<Entity>();
+    private List<Entity> ateFood = new List<Entity>();
 
     public CollideSystem() : base(
                 typeof(Shared.Components.Collision)
                 )
-    {            
-      // Register our own join handler
-      registerHandler(Shared.Messages.Type.Join, (int clientId, TimeSpan elapsedTime, Shared.Messages.Message message) =>
-      {
-        if (m_joinHandler != null)
-        {
-          m_joinHandler(clientId);
-        }
-      });
-
-      // Register our own disconnect handler
-      registerHandler(Shared.Messages.Type.Disconnect, (int clientId, TimeSpan elapsedTime, Shared.Messages.Message message) =>
-      {
-        if (m_disconnectHandler != null)
-        {
-          m_disconnectHandler(clientId);
-        }
-      });
+    {
     }
     public override void update(TimeSpan elapsedTime)
     {
-      List<Entity> entities1 = m_entities.Values.ToList();
-      List<Entity> entities2 = m_entities.Values.ToList();
-
-      for (int i = 0; i < entities1.Count; i++)
+      foreach (Entity player in m_players.Values)
       {
-        for (int j = 0; (j < entities2.Count); j++)
-        {
-          var pos1 = entities1[i].get<Position>().position;
-          var size1 = entities1[i].get<Size>().size;
-          var pos2 = entities2[j].get<Position>().position;
-          var size2 = entities2[j].get<Size>().size;
-          Entity entity1 = entities1[i];
-          Entity entity2 = entities2[i];
+        var pos1 = player.get<Position>().position;
+        var size1 = player.get<Size>().size;
 
-          if (pos1.X > pos2.X && pos1.X < pos2.X + size2.X)
+
+        if (pos1.X < 0 || pos1.X + size1.X > 5000 || pos1.Y < 0 || pos1.Y + size1.Y > 5000)
+        {
+          killed.Add(player);
+          continue;
+        }
+
+        foreach (Entity other in m_entities.Values)
+        {
+          if (other.id == player.id)
           {
-            if (pos1.Y > pos2.Y && pos1.Y < pos2.Y + size2.Y)
+            continue;
+          }
+          var pos2 = other.get<Position>().position;
+          var size2 = other.get<Size>().size;
+          float distance = (float)Math.Sqrt((pos1.X - pos2.X)*(pos1.X - pos2.X) + (pos1.Y - pos2.Y)*(pos1.Y - pos2.Y));
+          float radius = (size1.X + size2.X)/2;
+
+          if (distance < radius)
+          {
+            if (other.contains<C_Food>())
             {
-              if (entity1.contains<Head>() && entity2.contains<C_Food>())
+              removeList.Add(other);
+              ateFood.Add(player);
+              var head = player.get<Head>();
+              head.score += 1;
+            }
+            else if (other.contains<Head>() && other.id != player.id)
+            {
+              killed.Add(player);
+              killed.Add(other);
+            }
+            else if (other.contains<Connected>())
+            {
+              Entity follows = other.get<Connected>().follows;
+              if (follows != null)
               {
-                removeList.Add(entity2);
-              }
-              else if (entity2.contains<Head>() && entity1.contains<C_Food>())
-              {
-                removeList.Add(entity1);
-              }
-              else if (entity1.contains<Head>() && entity2.contains<Head>())
-              {
-                killed.Add(entity1);
-                killed.Add(entity2);
-              } 
-              else if (entity1.contains<Head>())
-              {
-                killed.Add(entity1);
-              } else
-              {
-                killed.Add(entity2);
+
+                Entity? next = null;
+                do
+                {
+                  next = follows.get<Connected>().follows;
+                  if (next != null)
+                  {
+                    follows = next;
+                  }
+                }
+                while (next != null);
+
+                if (follows.id != player.id)
+                {
+                  killed.Add(player);
+                }
               }
             }
+
           }
         }
-      } 
-    }
-    public void registerJoinHandler(JoinHandler handler)
-    {
-      m_joinHandler = handler;
+      }
+      playerAte();
+      removeItems();
+      killEntity();
     }
 
-    public void registerDisconnectHandler(DisconnectHandler handler)
+    public override bool add(Entity entity)
     {
-      m_disconnectHandler = handler;
+      if (entity.contains<Head>())
+      {
+        m_players.Add(entity.id, entity);
+      }
+
+      return base.add(entity);
+    }
+
+    public override void remove(uint id)
+    {
+      if (m_players.ContainsKey(id))
+      {
+        m_players.Remove(id);
+      }
+
+      base.remove(id);
     }
 
     public void registerRemoveHandler(RemoveHandler handler)
@@ -104,7 +124,12 @@ namespace Server.Systems
       m_removeHandler = handler;
     }
 
-    private void registerHandler(Shared.Messages.Type type, Handler handler)
+    public void registerEatHandler(EatHandler handler)
+    {
+      m_eatHandler = handler;
+    }
+
+    public void registerHandler(Shared.Messages.Type type, Handler handler)
     {
       m_commandMap[type] = handler;
     }
@@ -115,11 +140,25 @@ namespace Server.Systems
       {
         m_removeHandler(entity.id);
       }
+      removeList.Clear();
     }
 
     public void killEntity()
     {
+      foreach (Entity entity in killed)
+      {
+        m_removeHandler(entity.id);
+      }
+      killed.Clear();
+    }
 
+    public void playerAte()
+    {
+      foreach (Entity entity in ateFood)
+      {
+        m_eatHandler(entity.id);
+      }
+      ateFood.Clear();
     }
   }
 }
