@@ -1,11 +1,12 @@
-﻿using CS5410;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Shared.Components;
 
 namespace Shared.Entities
 {
   public class E_Food
   {
+    private static int subImageSize = 40;
+
     public static Entity create(string texture, float size, ushort value, Vector2? setPos = null)
     {
 
@@ -19,7 +20,7 @@ namespace Shared.Entities
       }
       int[] spriteTime = { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 };
 
-      entity.add(new A_Appearance(texture, 10, spriteTime));
+      entity.add(new A_Appearance(texture, subImageSize, spriteTime));
       entity.add(new Position(position));
       entity.add(new Size(new Vector2(size, size)));
       entity.add(new Collision());
@@ -41,7 +42,7 @@ namespace Shared.Entities
       }
       int[] spriteTime = { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 };
 
-      entity.add(new A_Appearance(texture, 10, spriteTime));
+      entity.add(new A_Appearance(texture, subImageSize, spriteTime));
       entity.add(new Position(position));
       entity.add(new Size(new Vector2(size, size)));
       entity.add(new Collision());

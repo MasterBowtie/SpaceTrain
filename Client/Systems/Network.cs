@@ -50,6 +50,7 @@ namespace Client.Systems
 
       if (messages != null)
       {
+      
         while (messages.Count > 0)
         {
           var message = messages.Dequeue();
@@ -106,7 +107,10 @@ namespace Client.Systems
 
     /// <summary>
     /// Handler for the ConnectAck message.  This records the clientId
-    /// assigned to it by the server, it also sends a request to the server
+    /// assigned to it by the server, 
+    /// 
+    /// Cody Edit:
+    /// previously use to send a request to the server
     /// to join the game.
     /// </summary>
     private void handleConnectAck(TimeSpan elapsedTime, ConnectAck message)

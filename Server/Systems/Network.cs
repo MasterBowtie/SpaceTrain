@@ -116,6 +116,7 @@ namespace Server.Systems
           }
         }
       }
+
     }
 
     /// <summary>
@@ -134,14 +135,6 @@ namespace Server.Systems
       m_reportThese.Clear();
     }
 
-    //This is bad form, but I can't get the server and client to sync positions up very well
-    private void updateClients(TimeSpan elapsedTime)
-    {
-      foreach (var entity in m_entities.Values)
-      {
-        var message = new UpdateEntity(entity, elapsedTime);
-        MessageQueueServer.instance.broadcastMessage(message);
-      }
-    }
+
   }
 }

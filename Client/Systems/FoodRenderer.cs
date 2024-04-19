@@ -37,6 +37,10 @@ namespace Client.Systems
           player.get<Position>().position.X - screenCenter.X,
           player.get<Position>().position.Y - screenCenter.Y);
       }
+      else
+      {
+        center = new Vector2(2500, 2500);
+      }
 
       spriteBatch.Begin();
 
@@ -44,7 +48,7 @@ namespace Client.Systems
       {
         var position = entity.get<Shared.Components.Position>().position - center;
         var size = entity.get<Shared.Components.Size>().size;
-        if (position.X > -100 && position.X  < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
+        if (position.X > -100 && position.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
         {
           var orientation = entity.get<Shared.Components.Position>().orientation;
           var sprite = entity.get<Components.A_Sprite>();
@@ -70,7 +74,7 @@ namespace Client.Systems
           // Build a rectangle for specific image
           Rectangle image = new Rectangle(
             subImageIndex * subImageWidth,
-            0, 
+            0,
             subImageWidth,
             texture.Height
             );

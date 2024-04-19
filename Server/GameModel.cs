@@ -1,10 +1,11 @@
 ﻿
-using System.Reflection.Metadata.Ecma335;
-using Microsoft.Xna.Framework;
+using System.IO.IsolatedStorage;
+using System.Runtime.Serialization.Json;
 using Server.Systems;
 using Shared.Components;
 using Shared.Entities;
 using Shared.Messages;
+using static Shared.Components.Component;
 
 namespace Server
 {
@@ -16,14 +17,20 @@ namespace Server
     private uint entityCounter = 2500;
     private Dictionary<uint, Entity> m_entities = new Dictionary<uint, Entity>();
     private Dictionary<int, uint> m_clientToEntityId = new Dictionary<int, uint>();
-    private Dictionary<int, int> m_scores = new Dictionary<int, int>();
+    private Dictionary<uint, int> m_entityToClientId = new Dictionary<uint, int>();
+    private Dictionary<uint, uint> m_scores = new Dictionary<uint, uint>();
     private Dictionary<uint, Entity> m_food = new Dictionary<uint, Entity>();
-    private float timer = 100;
+    private float timer = 1000;
     private float moveRate = 0.15f;
 
     Systems.Network m_systemNetwork = new Server.Systems.Network();
     Systems.CollideSystem m_collideSystem = new CollideSystem();
     Shared.Systems.Movement m_moveSystem = new Shared.Systems.Movement();
+
+
+    private bool saving = false;
+    private bool loading = false;
+    private ServerStorage storage = null;
 
     /// <summary>
     /// This is where the server-side simulation takes place.  Messages
@@ -37,15 +44,29 @@ namespace Server
       m_moveSystem.update(elapsedTime);
 
       timer -= elapsedTime.Milliseconds;
-      if (m_food.Count < 500 && timer < 0)
+      if (timer < 0)
       {
-        Entity food = E_Food.create("Textures/food", 25.0f, 1);
-        m_food.Add(food.id, food);
-        addEntity(food);
-        Message message = new NewEntity(food);
-        MessageQueueServer.instance.broadcastMessage(message);
-        timer += 100;
-      } 
+        if (m_food.Count < 500)
+        {
+          for (int i = 0; i < 10; i++)
+          {
+            Entity food = E_Food.create("Textures/food", 25.0f, 1);
+            m_food.Add(food.id, food);
+            addEntity(food);
+            Message message = new NewEntity(food);
+            MessageQueueServer.instance.broadcastMessage(message);
+          }
+        }
+        foreach (var entity in m_entities.Values)
+        {
+          if (entity.contains<Movement>())
+          {
+            var message = new UpdateEntity(entity, elapsedTime);
+            MessageQueueServer.instance.broadcastMessage(message);
+          }
+        }
+        timer += 1000;
+      }
     }
 
     /// <summary>
@@ -63,9 +84,13 @@ namespace Server
       m_collideSystem.registerRemoveHandler(handleRemove);
       m_collideSystem.registerEatHandler(handleEat);
 
+      loadState();
+      if (storage == null)
+      {
+        storage = new ServerStorage();
+      }
 
       MessageQueueServer.instance.registerConnectHandler(handleConnect);
-
 
       Entity food = E_Food.create("Textures/food", 25.0f, 1, entityCounter + 1);
       for (int i = 0; i < 100; i++)
@@ -96,6 +121,7 @@ namespace Server
       m_clients.Add(clientId);
 
       MessageQueueServer.instance.sendMessage(clientId, new Shared.Messages.ConnectAck());
+      MessageQueueServer.instance.sendMessage(clientId, new Shared.Messages.HighScores(storage.HighScores));
     }
 
     /// <summary>
@@ -110,16 +136,34 @@ namespace Server
       if (m_clientToEntityId.ContainsKey(clientId))
       {
         handleRemove(m_clientToEntityId[clientId]);
+        uint entityId = m_clientToEntityId[clientId];
+        m_entityToClientId.Remove(entityId);
       }
 
       m_clientToEntityId.Remove(clientId);
     }
 
-    // Sends out message to remove entity
-    // Snake components are turned into food. Doesn't turn head into food, prevents inaccessible food at border.
+    /// <summary>
+    /// Sends out message to remove entity
+    /// Snake components are turned into food. Doesn't turn head into food, prevents inaccessible food at border.
+    /// If player, add score to the m_score dictionary to sent to the player; 
+    /// </summary>
+    /// <param name="entityId"></param>
     private void handleRemove(uint entityId)
     {
-      if (m_entities.ContainsKey(entityId) && m_entities[entityId].contains<Connected>()) {
+      if (m_entities.ContainsKey(entityId) && m_entities[entityId].contains<Head>())
+      {
+        int clientId = m_entityToClientId[entityId];
+
+        Message scoreMessage = new Shared.Messages.Score(m_entities[entityId].get<Head>().score);
+        MessageQueueServer.instance.sendMessage(clientId, scoreMessage);
+        if (storage.submitScore(m_entities[entityId].get<Head>().score))
+        {
+          saveState();
+        }
+      }
+      if (m_entities.ContainsKey(entityId) && m_entities[entityId].contains<Connected>())
+      {
         List<Entity> all = new List<Entity>();
         Entity? next = m_entities[entityId].get<Connected>().leads;
         while (next != null)
@@ -136,6 +180,7 @@ namespace Server
           removeEntity(entity.id);
 
           Entity food = E_Food.create("Textures/food", 25.0f, 1, entity.id, entity.get<Position>().position);
+          m_food.Add(food.id, food);
           childMessage = new Shared.Messages.NewEntity(food);
           MessageQueueServer.instance.broadcastMessage(childMessage);
 
@@ -147,14 +192,20 @@ namespace Server
       MessageQueueServer.instance.broadcastMessage(message);
 
       removeEntity(entityId);
-      
+
     }
 
     private void handleEat(uint entityId)
     {
+      var head = m_entities[entityId].get<Head>();
+      head.score += 1;
       Entity tail = insertSegment(entityId);
+
       Message message = new Shared.Messages.NewEntity(tail);
       MessageQueueServer.instance.broadcastMessage(message);
+
+      message = new Shared.Messages.Score(head.score);
+      MessageQueueServer.instance.sendMessage(m_entityToClientId[entityId], message);
     }
 
     /// <summary>
@@ -192,7 +243,7 @@ namespace Server
     {
       Entity head = m_entities[entityId];
       Entity? part = head.get<Connected>().leads;
-      while (part != null && part.get<Connected>().leads != null) 
+      while (part != null && part.get<Connected>().leads != null)
       {
         part = part.get<Connected>().leads;
       }
@@ -224,6 +275,8 @@ namespace Server
       if (m_clientToEntityId.ContainsKey(clientId))
       {
         handleRemove(m_clientToEntityId[clientId]);
+        uint entityId = m_clientToEntityId[clientId];
+        m_entityToClientId.Remove(entityId);
       }
 
       m_clientToEntityId.Remove(clientId);
@@ -250,6 +303,7 @@ namespace Server
       addEntity(tail);
 
       m_clientToEntityId[clientId] = player.id;
+      m_entityToClientId[player.id] = clientId;
 
       // Step 3: Send the new player entity to the newly joined client
       MessageQueueServer.instance.sendMessage(clientId, new NewEntity(player));
@@ -280,6 +334,92 @@ namespace Server
           MessageQueueServer.instance.sendMessage(otherId, messageNewEntity);
         }
       }
+    }
+
+    /// <summary>
+    /// This is the storage units of the server
+    /// Holds the top five HighScores
+    /// </summary>
+    private void saveState()
+    {
+      lock (this)
+      {
+        if (!this.saving)
+        {
+          this.saving = true;
+          finalizeSaveAsync(storage);
+        }
+      }
+    }
+    private async Task finalizeSaveAsync(ServerStorage state)
+    {
+      await Task.Run(() =>
+      {
+        using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetUserStoreForApplication())
+        {
+          try
+          {
+            using (IsolatedStorageFileStream fs = storageFile.OpenFile("Snake.json", FileMode.Create))
+            {
+              if (fs != null)
+              {
+                DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(ServerStorage));
+                mySerializer.WriteObject(fs, state);
+              }
+            }
+          }
+          catch (IsolatedStorageException err)
+          {
+            System.Console.WriteLine("There was an error writing to storage\n{0}", err);
+          }
+        }
+
+        this.saving = false;
+      });
+    }
+    private void loadState()
+    {
+      lock (this)
+      {
+        if (!this.loading)
+        {
+          this.loading = true;
+          var result = finalizeLoadAsync();
+          result.Wait();
+        }
+      }
+    }
+    private async Task finalizeLoadAsync()
+    {
+      await Task.Run(() =>
+      {
+        using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetUserStoreForApplication())
+        {
+          try
+          {
+            if (storageFile.FileExists("Snake.json"))
+            {
+              using (IsolatedStorageFileStream fs = storageFile.OpenFile("Snake.json", FileMode.Open))
+              {
+                if (fs != null)
+                {
+                  DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(ServerStorage));
+                  storage = (ServerStorage)mySerializer.ReadObject(fs);
+                }
+              }
+            }
+            else
+            {
+              System.Console.WriteLine("Storage file doesn't exist yet!");
+            }
+          }
+          catch (IsolatedStorageException err)
+          {
+            System.Console.WriteLine("Something broke: {0}", err);
+          }
+        }
+        this.loading = false;
+      });
     }
   }
 }

@@ -9,7 +9,7 @@ namespace Client.Components
         public Sprite(Texture2D texture)
         {
             this.texture = texture;
-            center = new Vector2(texture.Width / 2, texture.Height / 2);
+            center = new Vector2(texture.Height / 2, texture.Height / 2);
         }
 
         public Texture2D texture { get; private set; }

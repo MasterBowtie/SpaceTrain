@@ -56,6 +56,9 @@ namespace Client
       m_messageCommand[Shared.Messages.Type.NewEntity] = () => { return new NewEntity(); };
       m_messageCommand[Shared.Messages.Type.UpdateEntity] = () => { return new UpdateEntity(); };
       m_messageCommand[Shared.Messages.Type.RemoveEntity] = () => { return new RemoveEntity(); };
+      m_messageCommand[Shared.Messages.Type.Score] = () => { return new Score(); };
+      m_messageCommand[Shared.Messages.Type.HighScores] = () => { return new HighScores(); };
+      
 
       try
       {

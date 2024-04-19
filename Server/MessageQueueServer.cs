@@ -104,7 +104,13 @@ namespace Server
     /// </summary>
     public void sendMessageWithLastId(int clientId, Message message)
     {
-      sendMessage(clientId, message, m_clientLastMessageId[clientId]);
+      if (m_clientLastMessageId.ContainsKey(clientId)) { 
+        sendMessage(clientId, message, m_clientLastMessageId[clientId]);
+      }
+      else
+      {
+        sendMessage(clientId, message);
+      }
     }
 
     /// <summary>

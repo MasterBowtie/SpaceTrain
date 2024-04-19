@@ -1,9 +1,11 @@
 
+using Client.States.Views;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace apedaile{
   public class MainMenuView : GameStateView {
@@ -18,9 +20,9 @@ namespace apedaile{
 
     private SpriteFont mainFont;
     private SpriteFont titleFont;
+    private Texture2D selector;
+    private DrawText draw;
 
-    private Texture2D background;
-    private Rectangle backRect;
     private Song music;
     private bool canPlayMusic = true;
 
@@ -39,8 +41,10 @@ namespace apedaile{
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
-      // background = contentManager.Load<Texture2D>("Images/background");
-      // backRect = new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
+      
+
+      draw = new DrawText(spriteBatch, graphics);
+      draw.loadContent(contentManager);
     }
 
     public override GameStateEnum processInput(GameTime gameTime)
@@ -68,30 +72,20 @@ namespace apedaile{
       
       spriteBatch.Begin();
 
-      // spriteBatch.Draw(background, backRect, Color.White);
+      draw.drawMenuItem(titleFont, "Space Caravan", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - titleFont.MeasureString("Space Caravan").X/2, titleFont.MeasureString("Space Caravan").X, false);
 
-      drawMenuItem(titleFont, "Game Title", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - titleFont.MeasureString("Game Title").X/2, titleFont.MeasureString("Game Title").X, false);
 
-      float bottom = drawMenuItem(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);
+      float bottom = draw.drawMenuItem(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);
 
-      bottom = drawMenuItem(mainFont, "High Scores", bottom, x, biggest.X + buffer, currentSelection == MenuState.HighScores);
+      bottom = draw.drawMenuItem(mainFont, "High Scores", bottom, x, biggest.X + buffer, currentSelection == MenuState.HighScores);
       
-      bottom = drawMenuItem(mainFont, "Settings", bottom, x, biggest.X + buffer, currentSelection == MenuState.Settings);
+      bottom = draw.drawMenuItem(mainFont, "Settings", bottom, x, biggest.X + buffer, currentSelection == MenuState.Settings);
       
-      bottom = drawMenuItem(mainFont, "About", bottom, x, biggest.X + buffer, currentSelection == MenuState.About);
+      bottom = draw.drawMenuItem(mainFont, "About", bottom, x, biggest.X + buffer, currentSelection == MenuState.About);
 
-      bottom = drawMenuItem(mainFont, "Quit", bottom, x, biggest.X + buffer, currentSelection == MenuState.Quit);
+      bottom = draw.drawMenuItem(mainFont, "Quit", bottom, x, biggest.X + buffer, currentSelection == MenuState.Quit);
 
       spriteBatch.End();
-    }
-
-    private float drawMenuItem(SpriteFont font, string text, float y, float x, float xSize, bool selected) {
-      Vector2 stringSize = font.MeasureString(text);
-      
-      spriteBatch.DrawString(
-        font, text, new Vector2(graphics.PreferredBackBufferWidth/2 - stringSize.X/2, y), selected? Color.Yellow : Color.White);
-
-      return y + stringSize.Y;
     }
 
     public void moveUp(GameTime gameTime, float value) {
@@ -109,7 +103,7 @@ namespace apedaile{
     public void selectItem(GameTime gameTime, float value) {
       switch (currentSelection) {
         case MenuState.NewGame: {
-          nextState = GameStateEnum.Tutorial;
+          nextState = GameStateEnum.GamePlay;
           break;
         }
         case MenuState.HighScores: {

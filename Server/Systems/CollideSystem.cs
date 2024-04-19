@@ -59,8 +59,6 @@ namespace Server.Systems
             {
               removeList.Add(other);
               ateFood.Add(player);
-              var head = player.get<Head>();
-              head.score += 1;
             }
             else if (other.contains<Head>() && other.id != player.id)
             {

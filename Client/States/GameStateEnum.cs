@@ -5,8 +5,6 @@ namespace apedaile {
     HighScores,
     Settings,
     About,
-    Exit,
-    Tutorial,
-    Lose
+    Exit
   }
 }

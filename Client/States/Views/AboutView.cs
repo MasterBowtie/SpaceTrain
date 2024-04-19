@@ -1,4 +1,5 @@
 using System;
+using Client.States.Views;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,16 +14,17 @@ namespace apedaile
     private GameStateEnum nextState = GameStateEnum.About;
     private SpriteFont mainFont;
     private SpriteFont titleFont;
-    private Texture2D background;
-    private Rectangle backRect;
+
     private Song music;
+    private DrawText draw;
 
     public override void loadContent(ContentManager contentManager)
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
-      // background = contentManager.Load<Texture2D>("Images/earth_image");
-      // backRect = new Rectangle(graphics.PreferredBackBufferWidth - background.Width/4, 0, background.Width/4, background.Height/4);
+      
+      draw = new DrawText(spriteBatch, graphics);
+      draw.loadContent(contentManager);
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
@@ -36,20 +38,21 @@ namespace apedaile
     }
 
     public override void render(GameTime gameTime) {
-      String message;
-      Vector2 stringSize;
+      Vector2 biggest = mainFont.MeasureString("Game Development");
+      int buffer = 50;
+      float x = graphics.PreferredBackBufferWidth / 2 - biggest.X / 2 - buffer / 2;
       spriteBatch.Begin();
-      // spriteBatch.Draw(background, backRect, Color.White);
 
-      message = "About";
-      stringSize = titleFont.MeasureString(message);
-      float bottom = stringSize.Y + graphics.PreferredBackBufferHeight * .1f;
-      spriteBatch.DrawString(
-        titleFont, message, new Vector2(graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, graphics.PreferredBackBufferHeight * .1f), Color.White);
-      
-      message = "Game Development\n  Cody Apedaile\nGame Design:\n  Cody Apedaile\nStressed Out: \n  Cody Apedaile\n  Berklie Apedaile";
-      stringSize = mainFont.MeasureString("Game Development:");
-      spriteBatch.DrawString(mainFont, message, new Vector2 (graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, bottom), Color.White);
+      draw.drawMenuItem(titleFont, "About", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth / 2 - titleFont.MeasureString("About").X / 2, titleFont.MeasureString("About").X, false);
+
+      float bottom = draw.drawMenuItem(mainFont, "Game Development", graphics.PreferredBackBufferHeight * .4f, x, biggest.X + buffer, false);
+
+      bottom = draw.drawMenuItem(mainFont, "  Cody Apedaile", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawMenuItem(mainFont, "  Dean Mathias", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawMenuItem(mainFont, "Game Design:", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawMenuItem(mainFont, "  Cody Apedaile", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawMenuItem(mainFont, "Images:", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawMenuItem(mainFont, "  NASA", bottom, x, biggest.X + buffer, false);
 
       spriteBatch.End();
     }

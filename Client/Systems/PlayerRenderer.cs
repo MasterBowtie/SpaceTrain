@@ -1,5 +1,6 @@
 ﻿
 using System;
+using Client.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Components;
@@ -7,16 +8,20 @@ using Shared.Entities;
 
 namespace Client.Systems
 {
-  public class PlayerRenderer : Shared.Systems.System
+    public class PlayerRenderer : Shared.Systems.System
   {
 
     private GraphicsDeviceManager graphics;
     private Vector2 screenCenter;
     private Vector2 center = new Vector2(-2500, -2500);
+    private Rectangle headRect = new Rectangle(0, 0, 75, 99);
+    private Rectangle segmentRect = new Rectangle(76, 0, 75, 99);
+    private Rectangle tailRect = new Rectangle(151, 0, 75, 99);
+
 
     public PlayerRenderer(GraphicsDeviceManager graphics) :
         base(
-            typeof(Client.Components.Sprite),
+            typeof(Sprite),
             typeof(Shared.Components.Position),
             typeof(Shared.Components.Size)
             )
@@ -37,6 +42,10 @@ namespace Client.Systems
          player.get<Position>().position.X - screenCenter.X,
          player.get<Position>().position.Y - screenCenter.Y);
       }
+      else
+      {
+        center = new Vector2(2500, 2500);
+      }
 
       spriteBatch.Begin();
 
@@ -47,8 +56,8 @@ namespace Client.Systems
         if (position.X - size.X > -100 && position.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
         {
           var orientation = entity.get<Shared.Components.Position>().orientation;
-          var texture = entity.get<Components.Sprite>().texture;
-          var texCenter = entity.get<Components.Sprite>().center;
+          var texture = entity.get<Sprite>().texture;
+          var texCenter = entity.get<Sprite>().center;
 
           // Build a rectangle centered at position, with width/height of size
 
@@ -62,7 +71,7 @@ namespace Client.Systems
           spriteBatch.Draw(
               texture,
               rectangle,
-              null,
+              headRect,
               Color.White,
               orientation,
               texCenter,
@@ -83,12 +92,19 @@ namespace Client.Systems
     {
       Entity entity = head.get<Connected>().leads;
 
-      var texture = head.get<Components.Sprite>().texture;
-      var texCenter = head.get<Components.Sprite>().center;
+      var texture = head.get<Sprite>().texture;
+      var texCenter = head.get<Sprite>().center;
       while (entity != null)
       {
         var position = entity.get<Shared.Components.Position>().position - center;
         var size = entity.get<Shared.Components.Size>().size;
+        Rectangle section = segmentRect;
+        if (entity.get<Connected>().leads == null)
+        {
+          section = tailRect;
+        }
+
+
         if (position.X - size.X / 2 > -100 && position.X + size.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y + size.Y < graphics.PreferredBackBufferHeight + 100)
         {
           var orientation = entity.get<Shared.Components.Position>().orientation;
@@ -105,12 +121,12 @@ namespace Client.Systems
           spriteBatch.Draw(
               texture,
               rectangle,
-              null,
+              section,
               Color.White,
               orientation,
               texCenter,
               SpriteEffects.None,
-              0);
+              1);
         }
         entity = entity.get<Connected>().leads;
       }
