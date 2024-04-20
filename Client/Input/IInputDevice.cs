@@ -5,6 +5,6 @@ namespace apedaile {
     public delegate void CommandDelegate(GameTime gameTime, float value);
     public delegate void CommandDelegatePosition(GameTime gameTime, int x, int y);
 
-    void Update(GameTime gameTime, GameStateEnum state);
+    void Update(GameTime gameTime, GameViewEnum state);
   }
 }

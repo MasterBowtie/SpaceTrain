@@ -23,7 +23,7 @@ namespace Client.States.Views
       selector = contentManager.Load<Texture2D>("Textures/MenuSelector");
     }
 
-    public float drawMenuItem(SpriteFont font, string text, float y, float x, float xSize, bool selected)
+    public float drawCentered(SpriteFont font, string text, float y, float x, float xSize, bool selected)
     {
       Vector2 stringSize = font.MeasureString(text);
 
@@ -44,6 +44,32 @@ namespace Client.States.Views
         font, text, new Vector2(graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, y + 2), Color.Black);
       spriteBatch.DrawString(
         font, text, new Vector2(graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, y), Color.White);
+
+      return y + stringSize.Y;
+    }
+
+    public float drawLeft(SpriteFont font, string text, float y, float x, float xSize, bool selected)
+    {
+      Vector2 stringSize = font.MeasureString(text);
+
+      if (selected)
+      {
+        if (selected)
+        {
+          spriteBatch.Draw(selector, new Rectangle((int)x, (int)y, (int)xSize, (int)stringSize.Y), Color.White);
+        }
+      }
+
+      spriteBatch.DrawString(
+        font, text, new Vector2(x-2, y), Color.Black);
+      spriteBatch.DrawString(
+        font, text, new Vector2(x + 2, y), Color.Black);
+      spriteBatch.DrawString(
+        font, text, new Vector2(x, y - 2), Color.Black);
+      spriteBatch.DrawString(
+        font, text, new Vector2(x, y + 2), Color.Black);
+      spriteBatch.DrawString(
+        font, text, new Vector2(x, y), Color.White);
 
       return y + stringSize.Y;
     }

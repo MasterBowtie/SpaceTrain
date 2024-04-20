@@ -7,7 +7,7 @@ namespace apedaile {
   public class KeyboardInput: IInputDevice {
     private KeyboardState previousState;
 
-    private Dictionary<GameStateEnum, Dictionary<Actions, CommandEntry>> stateCommands = new Dictionary<GameStateEnum, Dictionary<Actions, CommandEntry>>(); 
+    private Dictionary<GameViewEnum, Dictionary<Actions, CommandEntry>> stateCommands = new Dictionary<GameViewEnum, Dictionary<Actions, CommandEntry>>(); 
 
     public struct CommandEntry {
       public Keys key;
@@ -23,11 +23,11 @@ namespace apedaile {
       }
     }
     
-    public Dictionary<GameStateEnum, Dictionary<Actions, CommandEntry>> getStateCommands() {
+    public Dictionary<GameViewEnum, Dictionary<Actions, CommandEntry>> getStateCommands() {
       return stateCommands;
     }
 
-    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameStateEnum state, Actions action) {
+    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameViewEnum state, Actions action) {
       
       // This will check for duplicate keys and switch with the incoming key otherwise just update incoming values
       if (stateCommands.ContainsKey(state) && stateCommands[state].ContainsKey(action)) {
@@ -67,9 +67,9 @@ namespace apedaile {
       }
     }
 
-    public void Update(GameTime gameTime, GameStateEnum state) {
+    public void Update(GameTime gameTime, GameViewEnum state) {
       KeyboardState keyState = Keyboard.GetState();
-      if (state == GameStateEnum.Exit) {
+      if (state == GameViewEnum.Exit) {
         return;
       }
       Dictionary<Actions,CommandEntry> commandEntries = stateCommands[state];

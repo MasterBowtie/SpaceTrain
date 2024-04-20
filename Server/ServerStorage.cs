@@ -9,27 +9,27 @@ namespace Server
   public class ServerStorage
   {
     [DataMember()]
-    public List<uint> HighScores = new List<uint>();
+    public List<(string, uint)> HighScores = new List<(string, uint)>();
 
     public ServerStorage()
     {
     }
 
-    public bool submitScore(uint score)
+    public bool submitScore(uint score, string name)
     {
       if (HighScores.Count < 5)
       {
-        HighScores.Add(score);
+        HighScores.Add((name,score));
         HighScores.Sort(compare);
         Message updateScores = new Shared.Messages.HighScores(HighScores);
         MessageQueueServer.instance.broadcastMessage(updateScores);
         return true;
       }
-      foreach (uint item in HighScores)
+      foreach ((string, uint) item in HighScores)
       {
-        if (compare(item, score) > 0)
+        if (compare(item, (name,score)) > 0)
         {
-          HighScores.Add(score);
+          HighScores.Add((name, score));
 
           HighScores.Sort(compare);
           if (HighScores.Count > 5)
@@ -44,9 +44,9 @@ namespace Server
       return false;
     }
 
-    public int compare(uint item1, uint item2)
+    public int compare((string, uint) item1, (string, uint) item2)
     {
-      if (item1 > item2)
+      if (item1.Item2 > item2.Item2)
       {
         return -1;
       }

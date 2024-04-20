@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 
 namespace apedaile {
-  public class SettingsView: GameStateView {
+  public class SettingsView: GameView {
 
     private SpriteFont mainFont;
     private SpriteFont titleFont;
@@ -16,7 +16,7 @@ namespace apedaile {
     private SaveBinding save;
 
     private Actions currentSelection = Actions.up;
-    private GameStateEnum nextState = GameStateEnum.Settings;
+    private GameViewEnum nextState = GameViewEnum.Settings;
     private SettingState currentState;
     private SettingState select;
     private SettingState rebind;
@@ -31,10 +31,10 @@ namespace apedaile {
       rebind = new Rebind(this);
       currentState = select;
 
-      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameStateEnum.Settings, Actions.up);
-      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameStateEnum.Settings, Actions.down);
-      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameStateEnum.Settings, Actions.select);
-      keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState), GameStateEnum.Settings, Actions.exit);
+      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameViewEnum.Settings, Actions.up);
+      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameViewEnum.Settings, Actions.down);
+      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameViewEnum.Settings, Actions.select);
+      keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState), GameViewEnum.Settings, Actions.exit);
     }
 
     public void setupExtras(SaveBinding save, Storage storage) {
@@ -43,17 +43,17 @@ namespace apedaile {
       this.save = save;
     }
 
-    public override GameStateEnum processInput(GameTime gameTime)
+    public override GameViewEnum processInput(GameTime gameTime)
     {
       delay -= gameTime.ElapsedGameTime.Milliseconds;
       if (delay <= 0) {
         currentState.processInput(gameTime);
       }
-      if (nextState != GameStateEnum.Settings) {
-        nextState = GameStateEnum.Settings;
-        return GameStateEnum.MainMenu;
+      if (nextState != GameViewEnum.Settings) {
+        nextState = GameViewEnum.Settings;
+        return GameViewEnum.MainMenu;
       }
-      return GameStateEnum.Settings;
+      return GameViewEnum.Settings;
     }
 
     public override void loadContent(ContentManager contentManager)
@@ -102,7 +102,7 @@ namespace apedaile {
 
     public void exitState(GameTime gameTime, float value){
       if (currentState == select) {
-        nextState = GameStateEnum.MainMenu;
+        nextState = GameViewEnum.MainMenu;
         delay = 1000;
       } else {
         currentState = rebind;
@@ -126,10 +126,10 @@ namespace apedaile {
 
     public void saveBinding(Actions action, Keys key) {
       var commands = keyboard.getStateCommands();
-      foreach (GameStateEnum state in commands.Keys) {
+      foreach (GameViewEnum state in commands.Keys) {
         foreach (Actions g_action in commands[state].Keys) {
           if (g_action == action) {
-            if (state != GameStateEnum.GamePlay || action == Actions.select || action == Actions.exit) {
+            if (state != GameViewEnum.GamePlay || action == Actions.select || action == Actions.exit) {
               storage.registerCommand(key, true, commands[state][action].callback, state, action);
             }
             else {
@@ -187,8 +187,8 @@ namespace apedaile {
       }
 
       public void render(GameTime gameTime) {
-        var bindings = parent.keyboard.getStateCommands()[GameStateEnum.Settings];
-        var attack = parent.keyboard.getStateCommands()[GameStateEnum.GamePlay];
+        var bindings = parent.keyboard.getStateCommands()[GameViewEnum.Settings];
+        var attack = parent.keyboard.getStateCommands()[GameViewEnum.GamePlay];
         Vector2 biggest = parent.mainFont.MeasureString(string.Format("Rotate Right: {0}", bindings[Actions.select]));
         int buffer = 30;
         float x = parent.graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;

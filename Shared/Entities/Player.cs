@@ -6,7 +6,7 @@ namespace Shared.Entities
 {
   public class Player
   {
-    public static Entity create(int playerId, string texture, float size, float moveRate, float rotateRate)
+    public static Entity create(int playerId, string texture, float size, float moveRate, float rotateRate, string playerName)
     {
       Entity entity = new Entity();
 
@@ -29,7 +29,7 @@ namespace Shared.Entities
       entity.add(new Size(new Vector2(size, size)));
       entity.add(new Movement(moveRate, rotateRate));
       entity.add(new Collision());
-      entity.add(new Head(playerId));
+      entity.add(new Head(playerId, playerName));
 
       List<Input.Type> inputs = new List<Input.Type>();
       inputs.Add(Input.Type.Up);

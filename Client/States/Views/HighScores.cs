@@ -13,19 +13,19 @@ using Client.States.Views;
 
 namespace apedaile
 {
-  public class HighScoresView : GameStateView
+  public class HighScoresView : GameView
   {
 
-    private GameStateEnum nextState = GameStateEnum.HighScores;
+    private GameViewEnum nextState = GameViewEnum.HighScores;
     private SpriteFont mainFont;
     private SpriteFont titleFont;
 
-    private List<uint> scores;
+    private List<(string,uint)> scores;
     private DrawText draw;
 
     public override void loadContent(ContentManager contentManager)
     {
-      mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
+      mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime16");
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
 
       draw = new DrawText(spriteBatch, graphics);
@@ -39,14 +39,14 @@ namespace apedaile
       });
     }
 
-    public override GameStateEnum processInput(GameTime gameTime) {
-      if (nextState != GameStateEnum.HighScores)
+    public override GameViewEnum processInput(GameTime gameTime) {
+      if (nextState != GameViewEnum.HighScores)
       {
-        GameStateEnum nextState = this.nextState;
-        this.nextState = GameStateEnum.HighScores;
+        GameViewEnum nextState = this.nextState;
+        this.nextState = GameViewEnum.HighScores;
         return nextState;
       }
-      return GameStateEnum.HighScores;
+      return GameViewEnum.HighScores;
     }
 
     public override void render(GameTime gameTime) {
@@ -58,7 +58,7 @@ namespace apedaile
       spriteBatch.Begin();
 
 
-      float bottom = draw.drawMenuItem(titleFont, "High Scores", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth / 2 - titleFont.MeasureString("High Scores").X / 2, titleFont.MeasureString("High Scores").X, false);
+      float bottom = draw.drawCentered(titleFont, "High Scores", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth / 2 - titleFont.MeasureString("High Scores").X / 2, titleFont.MeasureString("High Scores").X, false);
       bottom += buffer;
 
 
@@ -66,20 +66,22 @@ namespace apedaile
       {
         foreach (var item in scores)
         {
-          message = String.Format("Score: {0}", item);
-          bottom = draw.drawMenuItem(mainFont, message, bottom, x, biggest.X, false);
+          message = String.Format("Player: {0}", item.Item1);
+          bottom = draw.drawLeft(mainFont, message, bottom, x, biggest.X, false);
+          message = String.Format("   Score: {0}", item.Item2);
+          bottom = draw.drawLeft(mainFont, message, bottom, x, biggest.X, false);
         }
       }
       else
       {
         message = "Loading";
-        bottom = draw.drawMenuItem(mainFont, message, bottom, x, biggest.X, false);
+        bottom = draw.drawCentered(mainFont, message, bottom, x, biggest.X, false);
       }
       spriteBatch.End();
     }
 
     public override void setupInput(KeyboardInput keyboard) {
-      keyboard.registerCommand(Keys.Escape, true, exitState,GameStateEnum.HighScores, Actions.exit);
+      keyboard.registerCommand(Keys.Escape, true, exitState,GameViewEnum.HighScores, Actions.exit);
     }
 
     public override void update(GameTime gameTime) {
@@ -89,7 +91,7 @@ namespace apedaile
     }
 
     private void exitState(GameTime gameTime, float value) {
-      nextState = GameStateEnum.MainMenu;
+      nextState = GameViewEnum.MainMenu;
     }
 
     private void pauseMusic(GameTime gameTime, float value) {

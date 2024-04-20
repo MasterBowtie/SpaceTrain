@@ -1,10 +1,12 @@
 namespace apedaile {
-  public enum GameStateEnum {
+  public enum GameViewEnum {
     MainMenu,
     GamePlay,
+    Tutorial,
     HighScores,
     Settings,
     About,
-    Exit
+    Exit,
+    Model
   }
 }

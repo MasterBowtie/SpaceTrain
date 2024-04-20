@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Media;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace apedaile{
-  public class MainMenuView : GameStateView {
+  public class MainMenuView : GameView {
 
     private enum MenuState {
       NewGame,
@@ -27,14 +27,14 @@ namespace apedaile{
     private bool canPlayMusic = true;
 
     private MenuState currentSelection = MenuState.NewGame;
-    private GameStateEnum nextState = GameStateEnum.MainMenu;
+    private GameViewEnum nextState = GameViewEnum.MainMenu;
     private bool waitforKeyRelease = true;
 
     public override void setupInput(KeyboardInput keyboard) 
     {
-      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameStateEnum.MainMenu, Actions.up);
-      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameStateEnum.MainMenu, Actions.down);
-      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameStateEnum.MainMenu, Actions.select);
+      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameViewEnum.MainMenu, Actions.up);
+      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameViewEnum.MainMenu, Actions.down);
+      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameViewEnum.MainMenu, Actions.select);
     }
 
     public override void loadContent(ContentManager contentManager)
@@ -47,14 +47,14 @@ namespace apedaile{
       draw.loadContent(contentManager);
     }
 
-    public override GameStateEnum processInput(GameTime gameTime)
+    public override GameViewEnum processInput(GameTime gameTime)
     {
-      if (nextState != GameStateEnum.MainMenu) {
-        GameStateEnum nextState = this.nextState;
-        this.nextState = GameStateEnum.MainMenu;
+      if (nextState != GameViewEnum.MainMenu) {
+        GameViewEnum nextState = this.nextState;
+        this.nextState = GameViewEnum.MainMenu;
         return nextState;
       }
-      return GameStateEnum.MainMenu;
+      return GameViewEnum.MainMenu;
     }
     
     public override void update(GameTime gameTime)
@@ -72,18 +72,18 @@ namespace apedaile{
       
       spriteBatch.Begin();
 
-      draw.drawMenuItem(titleFont, "Space Caravan", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - titleFont.MeasureString("Space Caravan").X/2, titleFont.MeasureString("Space Caravan").X, false);
+      draw.drawCentered(titleFont, "Space Caravan", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - titleFont.MeasureString("Space Caravan").X/2, titleFont.MeasureString("Space Caravan").X, false);
 
 
-      float bottom = draw.drawMenuItem(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);
+      float bottom = draw.drawCentered(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);
 
-      bottom = draw.drawMenuItem(mainFont, "High Scores", bottom, x, biggest.X + buffer, currentSelection == MenuState.HighScores);
+      bottom = draw.drawCentered(mainFont, "High Scores", bottom, x, biggest.X + buffer, currentSelection == MenuState.HighScores);
       
-      bottom = draw.drawMenuItem(mainFont, "Settings", bottom, x, biggest.X + buffer, currentSelection == MenuState.Settings);
+      bottom = draw.drawCentered(mainFont, "Settings", bottom, x, biggest.X + buffer, currentSelection == MenuState.Settings);
       
-      bottom = draw.drawMenuItem(mainFont, "About", bottom, x, biggest.X + buffer, currentSelection == MenuState.About);
+      bottom = draw.drawCentered(mainFont, "About", bottom, x, biggest.X + buffer, currentSelection == MenuState.About);
 
-      bottom = draw.drawMenuItem(mainFont, "Quit", bottom, x, biggest.X + buffer, currentSelection == MenuState.Quit);
+      bottom = draw.drawCentered(mainFont, "Quit", bottom, x, biggest.X + buffer, currentSelection == MenuState.Quit);
 
       spriteBatch.End();
     }
@@ -103,23 +103,23 @@ namespace apedaile{
     public void selectItem(GameTime gameTime, float value) {
       switch (currentSelection) {
         case MenuState.NewGame: {
-          nextState = GameStateEnum.GamePlay;
+          nextState = GameViewEnum.Tutorial;
           break;
         }
         case MenuState.HighScores: {
-          nextState = GameStateEnum.HighScores;
+          nextState = GameViewEnum.HighScores;
           break;
         }
         case MenuState.Settings: {
-          nextState = GameStateEnum.Settings;
+          nextState = GameViewEnum.Settings;
           break;
         }
         case MenuState.About: {
-          nextState = GameStateEnum.About;
+          nextState = GameViewEnum.About;
           break;
         }
         case MenuState.Quit: {
-          nextState = GameStateEnum.Exit;
+          nextState = GameViewEnum.Exit;
           break;
         }
       }

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace apedaile {
-  public abstract class GameStateView: IGameState {
+  public abstract class GameView: IGameView {
     protected GraphicsDeviceManager graphics;
     protected BasicEffect effect;
     protected SpriteBatch spriteBatch;
@@ -18,7 +18,7 @@ namespace apedaile {
     
     public abstract void setupInput(KeyboardInput keyboard);
 
-    public abstract GameStateEnum processInput(GameTime gameTime);
+    public abstract GameViewEnum processInput(GameTime gameTime);
 
     public abstract void render(GameTime gameTime);
 

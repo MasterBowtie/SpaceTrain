@@ -35,7 +35,7 @@ namespace apedaile {
       return bindings;
     }
 
-    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameStateEnum state, Actions action) {
+    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameViewEnum state, Actions action) {
       keyboard.registerCommand(key, keyPressOnly, callback, state, action);
       if (bindings.ContainsKey(state.ToString())) {
         if (bindings[state.ToString()].ContainsKey(action.ToString())) {
@@ -62,7 +62,7 @@ namespace apedaile {
     public void loadCommands() {
       var stateCommands = keyboard.getStateCommands();
       if (bindings.Count == 0) {
-        foreach (GameStateEnum state in stateCommands.Keys) {
+        foreach (GameViewEnum state in stateCommands.Keys) {
             foreach (Actions action in stateCommands[state].Keys) {
               KeyboardInput.CommandEntry entry = stateCommands[state][action];
               registerCommand(
@@ -75,7 +75,7 @@ namespace apedaile {
             }
         }
       } else {
-      foreach (GameStateEnum state in stateCommands.Keys) {
+      foreach (GameViewEnum state in stateCommands.Keys) {
         if (bindings.ContainsKey(state.ToString())) {
           var stateBindings = bindings[state.ToString()];
           foreach (Actions action in stateCommands[state].Keys) {

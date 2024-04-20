@@ -15,6 +15,7 @@ namespace Shared.Messages
       {
         this.hasHead = true;
         this.head = entity.get<Head>().id;
+        this.headName = entity.get<Head>().name;
       }
 
       if (entity.contains<Shared.Components.TurnPoint>())
@@ -96,6 +97,7 @@ namespace Shared.Messages
     // Head
     public bool hasHead { get; private set; } = false;
     public int head { get; private set; }
+    public string headName { get; private set; }
 
     //Turn Point
     public bool hasTurnPoint { get; private set; } = false;
@@ -145,6 +147,8 @@ namespace Shared.Messages
       if (hasHead)
       {
         data.AddRange(BitConverter.GetBytes(head));
+        data.AddRange(BitConverter.GetBytes(headName.Length));
+        data.AddRange(Encoding.UTF8.GetBytes(headName));
       }
 
       data.AddRange(BitConverter.GetBytes(hasTurnPoint));
@@ -241,6 +245,10 @@ namespace Shared.Messages
       {
         this.head = BitConverter.ToInt32(data, offset);
         offset += sizeof(Int32);
+        int stringSize = BitConverter.ToInt32(data, offset);
+        offset += sizeof(Int32);
+        this.headName = Encoding.UTF8.GetString(data, offset, stringSize);
+        offset += stringSize;
       }
 
       this.hasTurnPoint = BitConverter.ToBoolean(data, offset);

@@ -157,7 +157,7 @@ namespace Server
 
         Message scoreMessage = new Shared.Messages.Score(m_entities[entityId].get<Head>().score);
         MessageQueueServer.instance.sendMessage(clientId, scoreMessage);
-        if (storage.submitScore(m_entities[entityId].get<Head>().score))
+        if (storage.submitScore(m_entities[entityId].get<Head>().score, m_entities[entityId].get<Head>().name))
         {
           saveState();
         }
@@ -290,13 +290,15 @@ namespace Server
     /// </summary>
     private void handleJoin(int clientId, TimeSpan elapsedTime, Shared.Messages.Message message)
     {
+      Shared.Messages.Join messageJoin = (Shared.Messages.Join)message;
+
       // Step 1: Tell the newly connected player about all other entities
       reportAllEntities(clientId);
 
       // Step 2: Create an entity for the newly joined player and sent it
       //         to the newly joined client
 
-      Entity player = Shared.Entities.Player.create(nextPlayerId, "Textures/playerShip1_blue", 50, moveRate, (float)Math.PI / 1000);
+      Entity player = Shared.Entities.Player.create(nextPlayerId, "Textures/playerShip1_blue", 50, moveRate, (float)Math.PI / 1000, messageJoin.playerName);
       Entity tail = Shared.Entities.Segment.create(50, moveRate, player.get<Position>(), player);
       player.add(new Connected(tail, null));
       addEntity(player);
