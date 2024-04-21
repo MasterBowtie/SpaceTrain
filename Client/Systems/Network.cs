@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Shared.Components;
 using Shared.Messages;
@@ -18,6 +19,9 @@ namespace Client.Systems
     private NewEntityHandler m_newEntityHandler;
     private uint m_lastMessageId = 0;
     private HashSet<uint> m_updatedEntities = new HashSet<uint>();
+    private bool connected = false;
+    private float timer = 5000;
+
 
     /// <summary>
     /// Primary activity in the constructor is to setup the command map
@@ -46,6 +50,18 @@ namespace Client.Systems
     /// </summary>
     public void update(TimeSpan elapsedTime, Queue<Message> messages)
     {
+
+
+      if (!connected)
+      {
+        timer -= (float)elapsedTime.TotalMilliseconds;
+        if (timer < 0)
+        {
+          MessageQueueClient.instance.initialize("localhost", 3000);
+          timer = 5000;
+        }
+      }
+
       m_updatedEntities.Clear();
 
       if (messages != null)
@@ -115,7 +131,7 @@ namespace Client.Systems
     /// </summary>
     private void handleConnectAck(TimeSpan elapsedTime, ConnectAck message)
     {
-      //MessageQueueClient.instance.sendMessage(new Join());
+      connected = true;
     }
 
     /// <summary>

@@ -9,10 +9,13 @@ namespace Shared.Components
             Down,
             Left,
             Right,
+            Select,
+            Exit,
             NE,
             NW,
             SE,
             SW,
+            None
         }
 
         public Input(List<Type> inputs)

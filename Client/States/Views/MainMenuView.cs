@@ -32,19 +32,20 @@ namespace apedaile{
 
     public override void setupInput(KeyboardInput keyboard) 
     {
-      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameViewEnum.MainMenu, Actions.up);
-      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameViewEnum.MainMenu, Actions.down);
-      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameViewEnum.MainMenu, Actions.select);
+      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameViewEnum.MainMenu, Shared.Components.Input.Type.Up);
+      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameViewEnum.MainMenu, Shared.Components.Input.Type.Down);
+      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameViewEnum.MainMenu, Shared.Components.Input.Type.Select);
     }
 
     public override void loadContent(ContentManager contentManager)
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
-      
+    }
 
-      draw = new DrawText(spriteBatch, graphics);
-      draw.loadContent(contentManager);
+    public override void setupDraw(DrawText draw)
+    {
+      this.draw = draw;
     }
 
     public override GameViewEnum processInput(GameTime gameTime)
@@ -72,7 +73,7 @@ namespace apedaile{
       
       spriteBatch.Begin();
 
-      draw.drawCentered(titleFont, "Space Caravan", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - titleFont.MeasureString("Space Caravan").X/2, titleFont.MeasureString("Space Caravan").X, false);
+      draw.drawCentered(titleFont, "Space Train", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - titleFont.MeasureString("Space Caravan").X/2, titleFont.MeasureString("Space Caravan").X, false);
 
 
       float bottom = draw.drawCentered(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);

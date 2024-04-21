@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using apedaile;
 using Client.Components;
+using Client.States.Views;
 using Client.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -70,6 +71,9 @@ namespace Client
       tileRenderer = new Client.Systems.TileRenderer(graphics);
       tileRenderer.loadContent(contentManager);
     }
+
+    public override void setupDraw(DrawText draw)
+    { }
 
     public override void update(GameTime gameTime)
     {

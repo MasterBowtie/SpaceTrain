@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Xml.XPath;
 using Client;
 using Client.States.Views;
 using Microsoft.Xna.Framework;
@@ -43,9 +42,12 @@ namespace apedaile
 
     public void setupInput(KeyboardInput keyboard, Client.Systems.KeyboardInput systemKeyboardInput)
     {
-      keyboard.registerCommand(Keys.Escape, true, new IInputDevice.CommandDelegate(exit), GameViewEnum.GamePlay, Actions.exit);
-      keyboard.registerCommand(Keys.Enter, true, new IInputDevice.CommandDelegate(proceed), GameViewEnum.GamePlay, Actions.select);
-
+      keyboard.registerCommand(Keys.Escape, true, new IInputDevice.CommandDelegate(exit), GameViewEnum.GamePlay, Shared.Components.Input.Type.Exit);
+      keyboard.registerCommand(Keys.Enter, true, new IInputDevice.CommandDelegate(proceed), GameViewEnum.GamePlay, Shared.Components.Input.Type.Select);
+      keyboard.registerCommand(Keys.Up, false, new IInputDevice.CommandDelegate(up), GameViewEnum.GamePlay, Shared.Components.Input.Type.Up);
+      keyboard.registerCommand(Keys.Down, false, new IInputDevice.CommandDelegate(down), GameViewEnum.GamePlay, Shared.Components.Input.Type.Down);
+      keyboard.registerCommand(Keys.Left, false, new IInputDevice.CommandDelegate(left), GameViewEnum.GamePlay, Shared.Components.Input.Type.Left);
+      keyboard.registerCommand(Keys.Right, false, new IInputDevice.CommandDelegate(right), GameViewEnum.GamePlay, Shared.Components.Input.Type.Right);
       // Attempt to add to storage
       this.systemKeyboardInput = systemKeyboardInput;
     }
@@ -69,13 +71,15 @@ namespace apedaile
       lostState = new LostState(this);
       currentState = playState;
 
-      draw = new DrawText(spriteBatch, graphics);
-      draw.loadContent(contentManager);
-
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
       textBack = contentManager.Load<Texture2D>("Textures/menu");
 
       this.contentManager = contentManager;
+    }
+
+    public override void setupDraw(DrawText draw)
+    {
+      this.draw = draw;
     }
 
     public override GameViewEnum processInput(GameTime gameTime)
@@ -140,6 +144,17 @@ namespace apedaile
       }
     }
 
+    /// <summary>
+    /// Inputs are for pairing with the Network Inputs
+    /// This helps with storage
+    /// </summary>
+    /// <param name="gametime"></param>
+    /// <param name="value"></param>
+    public void up(GameTime gametime, float value) { }
+    public void down(GameTime gametime, float value) { }
+    public void left(GameTime gametime, float value) { }
+    public void right(GameTime gametime, float value) { }
+
     public void signalKeyPressed(Keys key)
     {
       systemKeyboardInput.keyPressed(key);
@@ -200,29 +215,30 @@ namespace apedaile
         parent.spriteBatch.Draw(
           parent.textBack,
           new Rectangle(
-            (int)(parent.graphics.PreferredBackBufferWidth / 2 - measure2.X/2 - buffer),
+            (int)(parent.graphics.PreferredBackBufferWidth / 2 - measure2.X / 2 - buffer),
             (int)(parent.graphics.PreferredBackBufferHeight / 2 - measure2.Y - buffer),
             (int)(measure2.X + buffer * 2),
             (int)(measure2.Y * 2 + buffer * 2)),
           Color.White);
+        parent.spriteBatch.End();
 
-        bool stuff = false;
+
         float bottom = parent.draw.drawCentered(parent.mainFont,
           "You Died!",
           parent.graphics.PreferredBackBufferHeight / 2 - measure.Y,
-          parent.graphics.PreferredBackBufferWidth / 2 - measure.X - buffer/2,
+          parent.graphics.PreferredBackBufferWidth / 2 - measure.X - buffer / 2,
           measure.X,
           false
           );
+
         parent.draw.drawCentered(
           parent.mainFont,
-          String.Format("Scores: {0}", parent.score), 
+          String.Format("Scores: {0}", parent.score),
           bottom,
           parent.graphics.PreferredBackBufferWidth / 2 - measure2.X - buffer / 2,
           measure2.X,
           false);
 
-        parent.spriteBatch.End();
       }
 
       public void update(GameTime gameTime)

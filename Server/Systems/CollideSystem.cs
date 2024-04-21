@@ -1,5 +1,5 @@
 ﻿
-using Microsoft.Xna.Framework;
+using Client.Components;
 using Shared.Components;
 using Shared.Entities;
 
@@ -35,6 +35,16 @@ namespace Server.Systems
         var pos1 = player.get<Position>().position;
         var size1 = player.get<Size>().size;
 
+        if (player.contains<LifeTime>())
+        {
+          var time = player.get<LifeTime>();
+          time.time -= (float)elapsedTime.TotalMilliseconds;
+
+          if (time.time < 0)
+          {
+            player.remove<LifeTime>();
+          }
+        }
 
         if (pos1.X < 0 || pos1.X + size1.X > 5000 || pos1.Y < 0 || pos1.Y + size1.Y > 5000)
         {
@@ -50,8 +60,8 @@ namespace Server.Systems
           }
           var pos2 = other.get<Position>().position;
           var size2 = other.get<Size>().size;
-          float distance = (float)Math.Sqrt((pos1.X - pos2.X)*(pos1.X - pos2.X) + (pos1.Y - pos2.Y)*(pos1.Y - pos2.Y));
-          float radius = (size1.X + size2.X)/2;
+          float distance = (float)Math.Sqrt((pos1.X - pos2.X) * (pos1.X - pos2.X) + (pos1.Y - pos2.Y) * (pos1.Y - pos2.Y));
+          float radius = (size1.X + size2.X) / 2;
 
           if (distance < radius)
           {
@@ -62,8 +72,14 @@ namespace Server.Systems
             }
             else if (other.contains<Head>() && other.id != player.id)
             {
-              killed.Add(player);
-              killed.Add(other);
+              if (!player.contains<LifeTime>())
+              {
+                killed.Add(player);
+              }
+              if (!other.contains<LifeTime>())
+              {
+                killed.Add(other);
+              }
             }
             else if (other.contains<Connected>())
             {
@@ -82,7 +98,7 @@ namespace Server.Systems
                 }
                 while (next != null);
 
-                if (follows.id != player.id)
+                if (follows.id != player.id && !player.contains<LifeTime>())
                 {
                   killed.Add(player);
                 }

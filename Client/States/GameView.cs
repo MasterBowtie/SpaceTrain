@@ -1,3 +1,4 @@
+using Client.States.Views;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,6 +18,8 @@ namespace apedaile {
     public abstract void loadContent(ContentManager contentManager);
     
     public abstract void setupInput(KeyboardInput keyboard);
+
+    public abstract void setupDraw(DrawText draw);
 
     public abstract GameViewEnum processInput(GameTime gameTime);
 

@@ -3,9 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Media;
-using Microsoft.Win32.SafeHandles;
 using Shared.Entities;
 using Shared.Messages;
 using System.Collections.Generic;
@@ -27,9 +25,11 @@ namespace apedaile
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime16");
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
+    }
 
-      draw = new DrawText(spriteBatch, graphics);
-      draw.loadContent(contentManager);
+    public override void setupDraw(DrawText draw)
+    {
+      this.draw = draw;
     }
 
     public void setupNetwork(Client.Systems.Network network) {
@@ -75,13 +75,13 @@ namespace apedaile
       else
       {
         message = "Loading";
-        bottom = draw.drawCentered(mainFont, message, bottom, x, biggest.X, false);
+        bottom = draw.drawCentered(titleFont, message, bottom, x, biggest.X, false);
       }
       spriteBatch.End();
     }
 
     public override void setupInput(KeyboardInput keyboard) {
-      keyboard.registerCommand(Keys.Escape, true, exitState,GameViewEnum.HighScores, Actions.exit);
+      keyboard.registerCommand(Keys.Escape, true, exitState,GameViewEnum.HighScores, Shared.Components.Input.Type.Exit);
     }
 
     public override void update(GameTime gameTime) {

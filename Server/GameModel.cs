@@ -1,6 +1,7 @@
 ﻿
 using System.IO.IsolatedStorage;
 using System.Runtime.Serialization.Json;
+using Client.Components;
 using Server.Systems;
 using Shared.Components;
 using Shared.Entities;
@@ -39,6 +40,7 @@ namespace Server
     /// </summary>
     public void update(TimeSpan elapsedTime)
     {
+
       m_systemNetwork.update(elapsedTime, MessageQueueServer.instance.getMessages());
       m_collideSystem.update(elapsedTime);
       m_moveSystem.update(elapsedTime);
@@ -199,12 +201,15 @@ namespace Server
     {
       var head = m_entities[entityId].get<Head>();
       head.score += 1;
-      Entity tail = insertSegment(entityId);
+      if (head.score / 5 > head.segments) {
+        head.segments++;
+        Entity tail = insertSegment(entityId);
 
-      Message message = new Shared.Messages.NewEntity(tail);
-      MessageQueueServer.instance.broadcastMessage(message);
+        Message segmentMessage = new Shared.Messages.NewEntity(tail);
+        MessageQueueServer.instance.broadcastMessage(segmentMessage);
+      }
 
-      message = new Shared.Messages.Score(head.score);
+      Message message = new Shared.Messages.Score(head.score);
       MessageQueueServer.instance.sendMessage(m_entityToClientId[entityId], message);
     }
 
@@ -301,6 +306,7 @@ namespace Server
       Entity player = Shared.Entities.Player.create(nextPlayerId, "Textures/playerShip1_blue", 50, moveRate, (float)Math.PI / 1000, messageJoin.playerName);
       Entity tail = Shared.Entities.Segment.create(50, moveRate, player.get<Position>(), player);
       player.add(new Connected(tail, null));
+      player.add(new LifeTime(5000));
       addEntity(player);
       addEntity(tail);
 

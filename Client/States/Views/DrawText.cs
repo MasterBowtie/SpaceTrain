@@ -20,12 +20,13 @@ namespace Client.States.Views
 
     public void loadContent(ContentManager contentManager)
     {
-      selector = contentManager.Load<Texture2D>("Textures/MenuSelector");
+      selector = contentManager.Load<Texture2D>("Textures/menuSelector");
     }
 
     public float drawCentered(SpriteFont font, string text, float y, float x, float xSize, bool selected)
     {
       Vector2 stringSize = font.MeasureString(text);
+      spriteBatch.Begin();
 
       if (selected) {
         if (selected)
@@ -45,12 +46,15 @@ namespace Client.States.Views
       spriteBatch.DrawString(
         font, text, new Vector2(graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, y), Color.White);
 
+      spriteBatch.End();
+
       return y + stringSize.Y;
     }
 
     public float drawLeft(SpriteFont font, string text, float y, float x, float xSize, bool selected)
     {
       Vector2 stringSize = font.MeasureString(text);
+      spriteBatch.Begin();
 
       if (selected)
       {
@@ -70,6 +74,8 @@ namespace Client.States.Views
         font, text, new Vector2(x, y + 2), Color.Black);
       spriteBatch.DrawString(
         font, text, new Vector2(x, y), Color.White);
+
+      spriteBatch.End();
 
       return y + stringSize.Y;
     }

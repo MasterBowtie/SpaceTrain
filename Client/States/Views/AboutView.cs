@@ -23,8 +23,11 @@ namespace apedaile
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime16");
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
       
-      draw = new DrawText(spriteBatch, graphics);
-      draw.loadContent(contentManager);
+    }
+
+    public override void setupDraw(DrawText draw)
+    {
+      this.draw = draw;
     }
 
     public override GameViewEnum processInput(GameTime gameTime) {
@@ -45,20 +48,20 @@ namespace apedaile
 
       draw.drawCentered(titleFont, "About", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth / 2 - titleFont.MeasureString("About").X / 2, titleFont.MeasureString("About").X, false);
 
-      float bottom = draw.drawCentered(mainFont, "Game Development", graphics.PreferredBackBufferHeight * .4f, x, biggest.X + buffer, false);
+      float bottom = draw.drawLeft(mainFont, "Game Development", graphics.PreferredBackBufferHeight * .4f, x, biggest.X + buffer, false);
 
-      bottom = draw.drawCentered(mainFont, "  Cody Apedaile", bottom, x, biggest.X + buffer, false);
-      bottom = draw.drawCentered(mainFont, "  Dean Mathias", bottom, x, biggest.X + buffer, false);
-      bottom = draw.drawCentered(mainFont, "Game Design:", bottom, x, biggest.X + buffer, false);
-      bottom = draw.drawCentered(mainFont, "  Cody Apedaile", bottom, x, biggest.X + buffer, false);
-      bottom = draw.drawCentered(mainFont, "Images:", bottom, x, biggest.X + buffer, false);
-      bottom = draw.drawCentered(mainFont, "  NASA", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawLeft(mainFont, "  Cody Apedaile", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawLeft(mainFont, "  Dean Mathias", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawLeft(mainFont, "Game Design:", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawLeft(mainFont, "  Cody Apedaile", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawLeft(mainFont, "Images:", bottom, x, biggest.X + buffer, false);
+      bottom = draw.drawLeft(mainFont, "  NASA", bottom, x, biggest.X + buffer, false);
 
       spriteBatch.End();
     }
 
     public override void setupInput(KeyboardInput keyboard) {
-      keyboard.registerCommand(Keys.Escape, true, exitState, GameViewEnum.About,  Actions.exit);
+      keyboard.registerCommand(Keys.Escape, true, exitState, GameViewEnum.About,  Shared.Components.Input.Type.Exit);
     }
 
     public override void update(GameTime gameTime) {

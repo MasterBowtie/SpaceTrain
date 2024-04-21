@@ -2,20 +2,22 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Shared.Components;
+
 
 namespace apedaile {
   public class KeyboardInput: IInputDevice {
     private KeyboardState previousState;
 
-    private Dictionary<GameViewEnum, Dictionary<Actions, CommandEntry>> stateCommands = new Dictionary<GameViewEnum, Dictionary<Actions, CommandEntry>>(); 
+    private Dictionary<GameViewEnum, Dictionary<Input.Type, CommandEntry>> stateCommands = new Dictionary<GameViewEnum, Dictionary<Input.Type, CommandEntry>>(); 
 
     public struct CommandEntry {
       public Keys key;
       public bool keyPressOnly;
       public IInputDevice.CommandDelegate callback;
-      public Actions action;
+      public Input.Type action;
 
-      public CommandEntry(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, Actions action) {
+      public CommandEntry(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, Input.Type action) {
         this.key = key;
         this.keyPressOnly = keyPressOnly;
         this.callback = callback;
@@ -23,11 +25,11 @@ namespace apedaile {
       }
     }
     
-    public Dictionary<GameViewEnum, Dictionary<Actions, CommandEntry>> getStateCommands() {
+    public Dictionary<GameViewEnum, Dictionary<Input.Type, CommandEntry>> getStateCommands() {
       return stateCommands;
     }
 
-    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameViewEnum state, Actions action) {
+    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameViewEnum state, Input.Type action) {
       
       // This will check for duplicate keys and switch with the incoming key otherwise just update incoming values
       if (stateCommands.ContainsKey(state) && stateCommands[state].ContainsKey(action)) {
@@ -62,7 +64,7 @@ namespace apedaile {
 
       // Create new state Dict and CommandEntry
       else {
-        stateCommands.Add(state, new Dictionary<Actions, CommandEntry>());
+        stateCommands.Add(state, new Dictionary<Input.Type, CommandEntry>());
         stateCommands[state].Add(action, new CommandEntry(key, keyPressOnly, callback, action));
       }
     }
@@ -72,7 +74,7 @@ namespace apedaile {
       if (state == GameViewEnum.Exit) {
         return;
       }
-      Dictionary<Actions,CommandEntry> commandEntries = stateCommands[state];
+      Dictionary<Input.Type, CommandEntry> commandEntries = stateCommands[state];
         foreach (CommandEntry entry in commandEntries.Values){
           if (entry.keyPressOnly && keyPressed(entry.key)) {
             entry.callback(gameTime, 1.0f);

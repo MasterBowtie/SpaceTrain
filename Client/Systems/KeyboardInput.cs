@@ -20,12 +20,19 @@ namespace Client.Systems
     private HashSet<Keys> m_keysPressed = new HashSet<Keys>();
     private List<Shared.Components.Input.Type> m_inputEvents = new List<Shared.Components.Input.Type>();
 
-    public KeyboardInput(List<Tuple<Shared.Components.Input.Type, Keys>> mapping) : base(typeof(Shared.Components.Input))
+    public KeyboardInput() : base(typeof(Shared.Components.Input))
+    {}
+
+    public Dictionary<Shared.Components.Input.Type, Keys> getMappings()
     {
-      foreach (var input in mapping)
-      {
-        m_typeToKey[input.Item1] = input.Item2;
-      }
+      return m_typeToKey;
+    }
+
+
+
+    public void addMapping(Shared.Components.Input.Type action, Keys key)
+    {
+      m_typeToKey[action] = key;
     }
 
     public override void update(TimeSpan elapsedTime)

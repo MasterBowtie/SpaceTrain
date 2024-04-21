@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Client.States.Views;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,17 +12,18 @@ namespace apedaile {
 
     private SpriteFont mainFont;
     private SpriteFont titleFont;
-    private Storage storage;
+    private ClientStorage storage;
     private KeyboardInput keyboard;
     private SaveBinding save;
 
-    private Actions currentSelection = Actions.up;
+    private Shared.Components.Input.Type currentSelection = Shared.Components.Input.Type.Up;
     private GameViewEnum nextState = GameViewEnum.Settings;
     private SettingState currentState;
     private SettingState select;
     private SettingState rebind;
     private bool waitforKeyRelease = true;
     private float delay = 1000;
+    private DrawText draw;
 
 
     public override void setupInput(KeyboardInput keyboard)
@@ -31,13 +33,13 @@ namespace apedaile {
       rebind = new Rebind(this);
       currentState = select;
 
-      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameViewEnum.Settings, Actions.up);
-      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameViewEnum.Settings, Actions.down);
-      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameViewEnum.Settings, Actions.select);
-      keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState), GameViewEnum.Settings, Actions.exit);
+      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp), GameViewEnum.Settings, Shared.Components.Input.Type.Up);
+      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown), GameViewEnum.Settings, Shared.Components.Input.Type.Down);
+      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem), GameViewEnum.Settings, Shared.Components.Input.Type.Select);
+      keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState), GameViewEnum.Settings, Shared.Components.Input.Type.Exit);
     }
 
-    public void setupExtras(SaveBinding save, Storage storage) {
+    public void setupExtras(SaveBinding save, ClientStorage storage) {
       // this.player = player;
       this.storage = storage;
       this.save = save;
@@ -59,15 +61,15 @@ namespace apedaile {
     public override void loadContent(ContentManager contentManager)
     {
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime32");
-      titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");    
+      titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime64");
     }
-    
+
+    public override void setupDraw(DrawText draw)
+    {
+      this.draw = draw;
+    }
     public override void render(GameTime gameTime)
     {
-      spriteBatch.Begin();
-      // spriteBatch.Draw(background, backRect, Color.White);
-      spriteBatch.End();
-
       currentState.render(gameTime);
     }
 
@@ -79,23 +81,14 @@ namespace apedaile {
       }
     }
 
-    private float drawMenuItem(SpriteFont font, string text, float y, bool selected) {
-      Vector2 stringSize = font.MeasureString(text);
-      
-      spriteBatch.DrawString(
-        font, text, new Vector2(graphics.PreferredBackBufferWidth/2 - stringSize.X/2, y), selected? Color.Yellow : Color.White);
-
-      return y + stringSize.Y;
-    }
-
     public void moveUp(GameTime gameTime, float value) {
-      if (currentSelection != Actions.up) {
+      if (currentSelection != Shared.Components.Input.Type.Up) {
         currentSelection = currentSelection - 1;
       }
     }
 
     public void moveDown(GameTime gameTime, float value) {
-      if (currentSelection != Actions.exit) {
+      if (currentSelection != Shared.Components.Input.Type.Exit) {
         currentSelection = currentSelection + 1;
       }
     }
@@ -124,12 +117,12 @@ namespace apedaile {
       }
     }
 
-    public void saveBinding(Actions action, Keys key) {
+    public void saveBinding(Shared.Components.Input.Type action, Keys key) {
       var commands = keyboard.getStateCommands();
       foreach (GameViewEnum state in commands.Keys) {
-        foreach (Actions g_action in commands[state].Keys) {
+        foreach (Shared.Components.Input.Type g_action in commands[state].Keys) {
           if (g_action == action) {
-            if (state != GameViewEnum.GamePlay || action == Actions.select || action == Actions.exit) {
+            if (state != GameViewEnum.GamePlay || action == Shared.Components.Input.Type.Select || action == Shared.Components.Input.Type.Exit) {
               storage.registerCommand(key, true, commands[state][action].callback, state, action);
             }
             else {
@@ -159,8 +152,25 @@ namespace apedaile {
         int buffer = 50;
         float x = parent.graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
 
-        parent.drawMenuItem(parent.mainFont, string.Format("Rebinding: {0}", parent.currentSelection), parent.graphics.PreferredBackBufferHeight * .1f, false);
-        parent.drawMenuItem(parent.mainFont, "Press Any Key", parent.graphics.PreferredBackBufferHeight/ 2, true);
+        String message = string.Format("Rebinding: {0}", parent.currentSelection);
+        Vector2 stringSize = parent.mainFont.MeasureString(message);
+        float bottom = parent.draw.drawCentered(
+          parent.mainFont, 
+          message, 
+          parent.graphics.PreferredBackBufferHeight * .1f, 
+          parent.graphics.PreferredBackBufferWidth/2 + stringSize.X/2,
+          stringSize.X,
+          false);
+
+        message = " Press Any Key ";
+        stringSize = parent.mainFont.MeasureString(message);
+        parent.draw.drawCentered(
+         parent.mainFont,
+         message,
+         parent.graphics.PreferredBackBufferHeight/2 - stringSize.Y/2,
+         parent.graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2,
+         stringSize.X,
+         true);
         parent.spriteBatch.End();
       }
       
@@ -188,8 +198,8 @@ namespace apedaile {
 
       public void render(GameTime gameTime) {
         var bindings = parent.keyboard.getStateCommands()[GameViewEnum.Settings];
-        var attack = parent.keyboard.getStateCommands()[GameViewEnum.GamePlay];
-        Vector2 biggest = parent.mainFont.MeasureString(string.Format("Rotate Right: {0}", bindings[Actions.select]));
+        var game = parent.keyboard.getStateCommands()[GameViewEnum.GamePlay];
+        Vector2 biggest = parent.mainFont.MeasureString(string.Format(" Select: {0} ", bindings[Shared.Components.Input.Type.Select].key));
         int buffer = 30;
         float x = parent.graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
       
@@ -197,17 +207,15 @@ namespace apedaile {
 
         Vector2 title = parent.titleFont.MeasureString("Settings");
 
-        float bottom = parent.drawMenuItem(parent.titleFont, "Settings", parent.graphics.PreferredBackBufferHeight * .1f, false);
+        float bottom = parent.draw.drawCentered(parent.titleFont, "Settings", parent.graphics.PreferredBackBufferHeight * .1f, parent.graphics.PreferredBackBufferWidth/2 - biggest.X/2, biggest.X,  false);
 
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Up: {0}", bindings[Actions.up].key), bottom, parent.currentSelection == Actions.up);
+        bottom = parent.draw.drawCentered(parent.mainFont, string.Format("Up: {0}", bindings[Shared.Components.Input.Type.Up].key), bottom, parent.graphics.PreferredBackBufferWidth / 2 - biggest.X / 2, biggest.X, parent.currentSelection == Shared.Components.Input.Type.Up);
+        bottom = parent.draw.drawCentered(parent.mainFont, string.Format("Down: {0}", bindings[Shared.Components.Input.Type.Down].key), bottom, parent.graphics.PreferredBackBufferWidth / 2 - biggest.X / 2, biggest.X, parent.currentSelection == Shared.Components.Input.Type.Down);
+        bottom = parent.draw.drawCentered(parent.mainFont, string.Format("Left: {0}", game[Shared.Components.Input.Type.Left].key), bottom, parent.graphics.PreferredBackBufferWidth / 2 - biggest.X / 2, biggest.X, parent.currentSelection == Shared.Components.Input.Type.Left);
+        bottom = parent.draw.drawCentered(parent.mainFont, string.Format("Right: {0}", game[Shared.Components.Input.Type.Right].key), bottom, parent.graphics.PreferredBackBufferWidth / 2 - biggest.X / 2, biggest.X, parent.currentSelection == Shared.Components.Input.Type.Right);
+        bottom = parent.draw.drawCentered(parent.mainFont, string.Format("Select: {0}", bindings[Shared.Components.Input.Type.Select].key), bottom, parent.graphics.PreferredBackBufferWidth / 2 - biggest.X / 2, biggest.X, parent.currentSelection == Shared.Components.Input.Type.Select);
+        bottom = parent.draw.drawCentered(parent.mainFont, string.Format("Exit: {0}", bindings[Shared.Components.Input.Type.Exit].key), bottom, parent.graphics.PreferredBackBufferWidth / 2 - biggest.X / 2, biggest.X, parent.currentSelection == Shared.Components.Input.Type.Exit);
 
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Down: {0}", bindings[Actions.down].key), bottom, parent.currentSelection == Actions.down);
-
-        // bottom = parent.drawMenuItem(parent.mainFont, string.Format("Attack: {0}", parent.keyboard.getStateCommands()[GameStateEnum.GamePlay][Actions.attack].key), bottom, parent.currentSelection == Actions.attack);
-
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Select: {0}", bindings[Actions.select].key), bottom, parent.currentSelection == Actions.select);
-
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Exit: {0}", bindings[Actions.exit].key), bottom, parent.currentSelection == Actions.exit);
 
         parent.spriteBatch.End();
       }

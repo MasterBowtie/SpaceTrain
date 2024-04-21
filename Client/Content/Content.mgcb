@@ -7577,7 +7577,7 @@
 /processorParam:TextureFormat=Color
 /build:Textures/menu.png
 
-#begin Textures/MenuSelector.png
+#begin Textures/menuSelector.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -7587,7 +7587,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Textures/MenuSelector.png
+/build:Textures/menuSelector.png
 
 #begin Textures/particle.png
 /importer:TextureImporter

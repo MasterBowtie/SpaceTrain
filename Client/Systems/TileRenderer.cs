@@ -1,6 +1,9 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Client.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -10,7 +13,7 @@ using Shared.Entities;
 
 namespace Client.Systems
 {
-    public class TileRenderer : Shared.Systems.System
+  public class TileRenderer : Shared.Systems.System
   {
 
     private GraphicsDeviceManager graphics;
@@ -40,9 +43,10 @@ namespace Client.Systems
       if (player != null)
       {
         center = new Vector2(
-          player.get<Position>().position.X - 3 * player.get<Size>().size.X/2  - screenCenter.X,
-         player.get<Position>().position.Y - 3 * player.get<Size>().size.Y/2 - screenCenter.Y);
-      } else
+          player.get<Position>().position.X - 3 * player.get<Size>().size.X / 2 - screenCenter.X,
+         player.get<Position>().position.Y - 3 * player.get<Size>().size.Y / 2 - screenCenter.Y);
+      }
+      else
       {
         center = new Vector2(2500, 2500);
       }
@@ -83,17 +87,21 @@ namespace Client.Systems
       spriteBatch.End();
     }
 
-    public void loadContent(ContentManager contentManager)
+    public async void loadContent(ContentManager contentManager)
     {
+      Texture2D image = contentManager.Load<Texture2D>("Textures/tile");
+      List<Task> tasks = new List<Task>();
       int size = 25;
       for (int y = 0; y < size; y++)
       {
         for (int x = 0; x < size; x++)
         {
           Entity tile = Tile.create(new Vector2(x * 200, y * 200), 200);
-          int total = y * size + x;
-          String value = total.ToString("0000");
-          Texture2D image = contentManager.Load<Texture2D>(String.Format("Background/tiles{0}", value));
+
+          //int total = y * size + x;
+          //String value = total.ToString("0000");
+          //Texture2D image = contentManager.Load<Texture2D>(String.Format("Background/tiles{0}", value));
+
           tile.add(new Sprite(image));
           base.add(tile);
         }

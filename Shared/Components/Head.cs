@@ -14,5 +14,6 @@ namespace Shared.Components
     public int id { get; private set; }
     public uint score { get; set; }
     public string name { get; private set; }
+    public uint segments { get; set; } = 0;
   }
 }
