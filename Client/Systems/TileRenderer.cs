@@ -1,8 +1,6 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Client.Components;
 using Microsoft.Xna.Framework;
@@ -54,51 +52,55 @@ namespace Client.Systems
 
       spriteBatch.Begin();
 
-      foreach (Entity entity in m_entities.Values)
+      lock (this)
       {
-        var position = entity.get<Shared.Components.Position>().position - center;
-        var size = entity.get<Shared.Components.Size>().size;
-        if (position.X > -100 && position.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
+
+        foreach (Entity entity in m_entities.Values)
         {
-          var orientation = entity.get<Shared.Components.Position>().orientation;
-          var texture = entity.get<Sprite>().texture;
-          var texCenter = entity.get<Sprite>().center;
+          var position = entity.get<Shared.Components.Position>().position - center;
+          var size = entity.get<Shared.Components.Size>().size;
+          if (position.X > -100 && position.X < graphics.PreferredBackBufferWidth + 100 && position.Y > -100 && position.Y < graphics.PreferredBackBufferHeight + 100)
+          {
+            var orientation = entity.get<Shared.Components.Position>().orientation;
+            var texture = entity.get<Sprite>().texture;
+            var texCenter = entity.get<Sprite>().center;
 
-          // Build a rectangle centered at position, with width/height of size
+            // Build a rectangle centered at position, with width/height of size
 
-          Rectangle rectangle = new Rectangle(
-              (int)(position.X),
-              (int)(position.Y),
-              (int)size.X,
-              (int)size.Y);
+            Rectangle rectangle = new Rectangle(
+                (int)(position.X),
+                (int)(position.Y),
+                (int)size.X,
+                (int)size.Y);
 
-          spriteBatch.Draw(
-              texture,
-              rectangle,
-              null,
-              Color.White,
-              orientation,
-              texCenter,
-              SpriteEffects.None,
-              0);
+            spriteBatch.Draw(
+                texture,
+                rectangle,
+                null,
+                Color.White,
+                orientation,
+                texCenter,
+                SpriteEffects.None,
+                0);
+          }
         }
       }
 
       spriteBatch.End();
     }
 
-    public async void loadContent(ContentManager contentManager)
+    public void loadContent(ContentManager contentManager)
     {
       Texture2D image = contentManager.Load<Texture2D>("Textures/tile");
-      List<Task> tasks = new List<Task>();
+
       int size = 25;
       for (int y = 0; y < size; y++)
       {
         for (int x = 0; x < size; x++)
         {
-          Entity tile = Tile.create(new Vector2(x * 200, y * 200), 200);
+          uint total = (uint)(y * size + x);
+          Entity tile = Tile.create(total, new Vector2(x * 200, y * 200), 200);
 
-          //int total = y * size + x;
           //String value = total.ToString("0000");
           //Texture2D image = contentManager.Load<Texture2D>(String.Format("Background/tiles{0}", value));
 
@@ -106,6 +108,28 @@ namespace Client.Systems
           base.add(tile);
         }
       }
+
+      Task.Run(() =>
+      {
+        for (int y = 0; y < size; y++)
+        {
+          for (int x = 0; x < size; x++)
+          {
+            uint total = (uint)(y * size + x);
+            Entity tile = Tile.create(total, new Vector2(x * 200, y * 200), 200);
+
+            String value = total.ToString("0000");
+            Texture2D image = contentManager.Load<Texture2D>(String.Format("Background/tiles{0}", value));
+
+            tile.add(new Sprite(image));
+            lock(this)
+            {
+              base.remove(total);
+              base.add(tile);
+            }
+          }
+        }
+      });
     }
   }
 }
